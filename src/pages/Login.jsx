@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Navigate, Link } from 'react-router-dom'
-import { doSignInWithEmailAndPassword, doSignInWithGoogle } from '../firebase/auth'
+import { doSignInWithEmailAndPassword, doSignInWithGoogle, doResetPassword } from '../firebase/auth'
 import { useAuth } from '../context/authContext/index'
 
 const Login = () => {
@@ -36,6 +36,17 @@ const Login = () => {
                 setErrorMessage(err.message)
                 setIsSigningIn(false)
             }
+        }
+    }
+
+    const onForgotPassword = async (e) => {
+        e.preventDefault()
+        try {
+            doResetPassword(email)
+            alert("Password reset email sent")
+        } catch (err) {
+            setErrorMessage(err.message)
+            setIsSigningIn(false)
         }
     }
 
@@ -93,6 +104,7 @@ const Login = () => {
                         </button>
                     </form>
                     <p className="text-center text-sm">Don't have an account? <Link to={'/register'} className="hover:underline font-bold">Sign up</Link></p>
+                    <p className="text-center text-sm hover:underline font-bold" onClick={ onForgotPassword }>Forgot Password?</p>
                     <div className='flex flex-row text-center w-full'>
                         <div className='border-b-2 mb-2.5 mr-2 w-full'></div><div className='text-sm font-bold w-fit'>OR</div><div className='border-b-2 mb-2.5 ml-2 w-full'></div>
                     </div>
