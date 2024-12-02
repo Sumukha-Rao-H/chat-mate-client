@@ -1,12 +1,14 @@
-import React from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom'
 import { doSignOut } from '../firebase/auth'
 import { useAuth } from '../context/authContext/index'
 
 const Header = () => {
     const navigate = useNavigate()
+    const location = useLocation();
     const { currentUser } = useAuth()
-    const [isLoading, setIsLoading] = React.useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState(null);
 
     const handleLogout = async () => {
         try {
@@ -17,6 +19,13 @@ const Header = () => {
         }
     };
      
+    const tabs = [
+        { name: "Dashboard", path: "/home" },
+        { name: "Social", path: "/social" },
+        { name: "Settings", path: "/settings" },
+        { name: "Logout", path: null },
+      ];
+
     return (
         <nav className='flex flex-row justify-between px-4 w-full z-20 fixed top-0 left-0 h-12 border-b place-content-center items-center bg-gray-200'>
             <div className="flex items-center text-sm text-black">
@@ -27,14 +36,25 @@ const Header = () => {
                 />
                 <span className='text-lg text-black font-bold p-3'>{currentUser.displayName || currentUser.email}</span>
             </div>
-            <div>
-            <button
-                className="bg-gray-500 text-white text-sm font-bold py-2 px-4 rounded shadow hover:bg-gray-600 transition"
-                onClick={handleLogout}
-                disabled={isLoading}
-            >
-                    {isLoading ? "Logging out..." : "Logout"}
-            </button>
+            <div className="flex space-x-3">
+                {tabs.map((tab) => (
+                    <p
+                    key={tab.name}
+                    className={`text-base cursor-pointer ${
+                        location.pathname === tab.path ? "text-gray-700 font-bold" : "hover:text-gray-400"
+                    }`}
+                    onClick={() => {
+                        if (tab.name === "Logout") {
+                            handleLogout();
+                        } else {
+                            setActiveTab(tab);
+                            navigate(tab.path);
+                        }
+                    }}
+                    >
+                    {tab.name === "Logout" && isLoading ? "Logging out..." : tab.name}
+                    </p>
+                ))}
             </div>
         </nav>
     )
