@@ -5,7 +5,8 @@ import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const ProfileImage = ({ imageUrl, onChangeImage }) => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [newImage, setNewImage] = useState("");
+  const [newImage, setNewImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -14,17 +15,18 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
 
   const togglePopup = () => setIsPopupOpen(!isPopupOpen);
 
+  // Handle image file selection
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setNewImage(file);
       const reader = new FileReader();
-      reader.onload = () => {
-        setNewImage(reader.result); // Set preview of the uploaded image
-      };
+      reader.onload = () => setPreviewImage(reader.result); // Preview the image
       reader.readAsDataURL(file);
     }
   };
 
+  // Handle the image save process
   const handleImageSave = async () => {
     if (!newImage) return;
 
@@ -38,29 +40,50 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
     setErrorMessage("");
 
     try {
-      // Update the image URL in Firestore
+      // Upload image to Cloudinary
+      const formData = new FormData();
+      formData.append("file", newImage);
+      formData.append("upload_preset", "chat-app"); // Replace with your Cloudinary upload preset
+
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/dtuunaa3q/image/upload`, // Replace with your Cloudinary cloud name
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to upload image to Cloudinary.");
+      }
+
+      const data = await response.json();
+      const cloudinaryUrl = data.secure_url; // Get the uploaded image URL
+
+      // Update the Firestore database with the image URL
       const userDocRef = doc(db, "users", user.uid);
       await setDoc(
         userDocRef,
-        { profileImageUrl: newImage },
-        { merge: true } // Update only the profileImageUrl field
+        { profileImageUrl: cloudinaryUrl }, // Store the URL
+        { merge: true } // Merge with existing document data
       );
 
-      // Trigger parent logic to update the displayed image
-      onChangeImage(newImage);
-      setNewImage("");
-      togglePopup();
+      // Update the UI
+      onChangeImage(cloudinaryUrl);
+      setNewImage(null); // Reset new image state
+      setPreviewImage(""); // Clear preview image
+      togglePopup(); // Close the popup
     } catch (error) {
       console.error("Error updating profile image:", error);
       setErrorMessage("Failed to update profile image. Please try again.");
     } finally {
-      setLoading(false);
+      setLoading(false); // Reset loading state
     }
   };
 
   return (
     <div className="flex flex-col items-center">
-      {/* Profile Image */}
+      {/* Profile Image Display */}
       <img
         src={imageUrl}
         alt="Profile"
@@ -68,12 +91,12 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
         onClick={togglePopup}
       />
 
-      {/* Popup */}
+      {/* Popup for Image Preview and Upload */}
       <Popup isOpen={isPopupOpen} onClose={togglePopup}>
         <div className="flex flex-col items-center">
-          {/* Maximized Image */}
+          {/* Maximized Preview Image */}
           <img
-            src={newImage || imageUrl}
+            src={previewImage || imageUrl}
             alt="Profile Enlarged"
             className="w-full max-w-md rounded-lg mb-4 object-cover"
           />
@@ -93,7 +116,7 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
             onChange={handleImageUpload}
           />
 
-          {/* Save Image Button */}
+          {/* Save Button */}
           <button
             onClick={handleImageSave}
             disabled={!newImage || loading}
