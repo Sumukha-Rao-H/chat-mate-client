@@ -6,6 +6,8 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "cloudinary": "^2.5.1",
+    "dotenv": "^16.4.7",
     "firebase": "^11.0.2",
     "login-signup-app": "file:",
     "react": "^18.3.1",

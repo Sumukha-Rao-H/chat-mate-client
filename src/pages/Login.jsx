@@ -27,18 +27,21 @@ const Login = () => {
     }
 
     const onGoogleSignIn = async (e) => {
-        e.preventDefault()
-        if (!isSigningIn) {
-            try {
-                setIsSigningIn(true)
-                await doSignInWithGoogle()
-                // No need to manually redirect, the userLoggedIn state change will trigger the Navigate
-            } catch (err) {
-                setErrorMessage(err.message)
-                setIsSigningIn(false)
-            }
+        e.preventDefault();
+    
+        if (isSigningIn) return; // Prevent multiple simultaneous clicks
+    
+        try {
+            setIsSigningIn(true);
+            await doSignInWithGoogle();
+            // No need for manual redirection; `onAuthStateChanged` will handle it
+        } catch (err) {
+            console.error("Google Sign-In error:", err); // Log error for debugging
+            setErrorMessage(err.message || "Failed to sign in with Google. Please try again.");
+        } finally {
+            setIsSigningIn(false); // Ensure this always runs
         }
-    }
+    };
 
     const onForgotPassword = async (e) => {
         e.preventDefault()

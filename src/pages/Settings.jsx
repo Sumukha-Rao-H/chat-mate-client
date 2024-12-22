@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
+import ProfileImage from '../components/ProfileImage';
+
 
 const Settings = () => {
     const [activeCategory, setActiveCategory] = useState("Account");
@@ -34,6 +36,18 @@ const Settings = () => {
         alert("Settings saved successfully!");
     };
 
+    const [profileImage, setProfileImage] = useState(
+        'https://via.placeholder.com/150'
+    );
+    
+    const handleChangeImage = () => {
+        // Logic to change the image (e.g., open a file picker, upload to Cloudinary)
+        const newImageUrl = prompt('Enter new image URL:', profileImage);
+        if (newImageUrl) {
+          setProfileImage(newImageUrl);
+        }
+    };
+
     const renderSettingsContent = () => {
         switch (activeCategory) {
         case "Account":
@@ -41,13 +55,9 @@ const Settings = () => {
             <div>
                 <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
                 <div className="space-y-4">
-                <div>
-                    <label className="block text-gray-700">Username</label>
-                    <input
-                    type="text"
-                    placeholder="Enter username"
-                    className="w-full p-2 border border-gray-300 rounded-md"
-                    />
+                <div className='flex space-x-4'>
+                    <ProfileImage imageUrl={profileImage} onChangeImage={handleChangeImage} />
+                    <label className="block text-lg text-gray-700 font-bold self-center">sumukha riot</label>
                 </div>
                 <div>
                     <label className="block text-gray-700">Email</label>
