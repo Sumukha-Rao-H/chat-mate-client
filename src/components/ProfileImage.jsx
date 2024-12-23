@@ -93,7 +93,7 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
 
       {/* Popup for Image Preview and Upload */}
       <Popup isOpen={isPopupOpen} onClose={togglePopup}>
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center px-2">
           {/* Maximized Preview Image */}
           <img
             src={previewImage || imageUrl}

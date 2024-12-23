@@ -11,6 +11,8 @@ const allUsers = [
 
 const Social = () => {
   const [activeTab, setActiveTab] = useState("Friends");
+  const [loading, setLoading] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [friends, setFriends] = useState([
     { id: 1, name: "John Doe" },
     { id: 2, name: "Jane Smith" },
@@ -134,9 +136,9 @@ const Social = () => {
   return (
     <>
       <Header />
-      <div className="flex h-screen grow pt-12">
-        {/* Sidebar */}
-        <div className="w-full sm:w-1/4 bg-gray-200 p-4">
+      <div className="flex h-screen flex-col lg:flex-row pt-12">
+        {/* Sidebar for larger screens */}
+        <div className="lg:w-1/4 bg-gray-200 p-4 lg:block hidden">
           <h1 className="text-2xl font-bold mb-6">Social</h1>
           <ul className="space-y-4">
             {["Friends", "Search", "Requests"].map((category) => (
@@ -155,8 +157,58 @@ const Social = () => {
           </ul>
         </div>
 
+        {/* Mobile Sidebar (Hamburger Menu) */}
+        <div className="lg:hidden p-4">
+          <button
+            className="text-gray-700"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          >
+            <svg
+              className="w-6 h-6"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+
+          {isSidebarOpen && (
+            <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4">
+              {["Friends", "Search", "Requests"].map((category) => (
+                <li
+                  key={category}
+                  className={`cursor-pointer p-2 rounded-md ${
+                    activeTab === category
+                      ? "bg-gray-500 text-white transition-all"
+                      : "hover:font-semibold"
+                  }`}
+                  onClick={() => {
+                    setIsSidebarOpen(false); // Close menu after selection
+                    setActiveTab(category);
+                  }}
+                >
+                  {category}
+                </li>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Main Content */}
-        <div className="w-full sm:w-3/4 p-6">{renderContent()}</div>
+        <div className="lg:w-3/4 w-full p-6">
+          {loading ? (
+            <p>Loading user data...</p>
+          ) : (
+            renderContent()
+          )}
+        </div>
       </div>
       <Footer />
     </>

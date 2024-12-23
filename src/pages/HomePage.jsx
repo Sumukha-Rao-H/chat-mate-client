@@ -34,11 +34,12 @@ const Home = () => {
     return (
         <>
             <Header />
-            <div className="flex flex-col min-h-screen bg-gray-50 pt-12">
-                <div className="flex-grow">
-                    <div className="flex">
+            <div className="flex flex-col min-h-screen bg-gray-50">
+                {/* Main Content */}
+                <div className="flex-grow flex flex-col pt-12">
+                    <div className="flex flex-grow">
                         {/* Chat Sidebar */}
-                        <div className="w-1/3 bg-gray-200 border-r border-gray-300 h-screen">
+                        <div className="w-full md:w-1/3 bg-gray-200 border-r border-gray-300 h-auto md:h-screen">
                             <div className="flex flex-col h-full">
                                 <div className="bg-gray-200 px-5 py-4 shadow-md">
                                     <h1 className="text-2xl font-bold text-gray-800">Chats</h1>
@@ -59,9 +60,9 @@ const Home = () => {
                                 </div>
                             </div>
                         </div>
-
+    
                         {/* Chat Window */}
-                        <div className="w-2/3 flex flex-col pb-10">
+                        <div className="hidden md:flex w-full md:w-2/3 flex-col pb-10">
                             <div className="bg-white px-4 py-3 border-b border-gray-300 flex justify-between items-center">
                                 <div className="font-bold text-gray-800">Mark Appleyard</div>
                                 <div className="text-gray-500 text-sm">Last active: 2:31AM</div>
@@ -96,8 +97,10 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
+    
+                {/* Footer */}
+                <Footer />
             </div>
-            <Footer />
         </>
     );
 };

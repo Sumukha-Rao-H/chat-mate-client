@@ -9,6 +9,7 @@ const Header = () => {
   const [previewImage, setPreviewImage] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const auth = getAuth();
   const db = getFirestore();
@@ -111,40 +112,98 @@ const Header = () => {
   };
 
   return (
-    <nav className="flex flex-row justify-between px-4 w-full z-20 fixed top-0 left-0 h-12 border-b place-content-center items-center bg-gray-200">
-      <div className="flex items-center text-sm text-black" onClick={() => navigate("/settings")}>
-        {profileImage ? (
-          <img
-            src={profileImage}
-            alt="Profile"
-            className="w-8 h-8 rounded-full border border-gray-400 cursor-pointer"
-          />
-        ) : (
-          <span className="w-8 h-8 rounded-full border border-gray-400 bg-gray-400"></span>
-        )}
-        <span className="text-lg text-black font-bold p-3">{auth.currentUser?.displayName || auth.currentUser?.email}</span>
-      </div>
+    <nav className="flex flex-row justify-between px-4 w-full z-20 fixed top-0 left-0 h-12 border-b items-center bg-gray-200">
+  {/* Profile Section */}
+  <div
+    className="flex items-center text-sm text-black"
+    onClick={() => navigate("/settings")}
+  >
+    {profileImage ? (
+      <img
+        src={profileImage}
+        alt="Profile"
+        className="w-8 h-8 rounded-full border border-gray-400 cursor-pointer"
+      />
+    ) : (
+      <span className="w-8 h-8 rounded-full border border-gray-400 bg-gray-400"></span>
+    )}
+    <span className="hidden sm:block text-lg text-black font-bold p-3">
+      {auth.currentUser?.displayName || auth.currentUser?.email}
+    </span>
+  </div>
 
-      <div className="flex space-x-3">
-        {tabs.map((tab) => (
-          <p
-            key={tab.name}
-            className={`text-base cursor-pointer ${
-              location.pathname === tab.path ? "text-gray-700 font-bold" : "hover:text-gray-400"
-            }`}
-            onClick={() => {
-              if (tab.name === "Logout") {
-                handleLogout();
-              } else {
-                navigate(tab.path);
-              }
-            }}
-          >
-            {tab.name}
-          </p>
-        ))}
-      </div>
-    </nav>
+  {/* Tabs and Mobile Menu */}
+  <div className="sm:hidden">
+    <button
+      className="text-gray-700"
+      onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+    >
+      <svg
+        className="w-6 h-6"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M4 6h16M4 12h16M4 18h16"
+        />
+      </svg>
+    </button>
+  </div>
+
+  {/* Desktop Tabs */}
+  <div className="hidden sm:flex space-x-3">
+    {tabs.map((tab) => (
+      <p
+        key={tab.name}
+        className={`text-base cursor-pointer ${
+          location.pathname === tab.path
+            ? "text-gray-700 font-bold"
+            : "hover:text-gray-400"
+        }`}
+        onClick={() => {
+          if (tab.name === "Logout") {
+            handleLogout();
+          } else {
+            navigate(tab.path);
+          }
+        }}
+      >
+        {tab.name}
+      </p>
+    ))}
+  </div>
+
+  {/* Mobile Menu */}
+  {mobileMenuOpen && (
+    <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4 sm:hidden">
+      {tabs.map((tab) => (
+        <p
+          key={tab.name}
+          className={`text-base cursor-pointer ${
+            location.pathname === tab.path
+              ? "text-gray-700 font-bold"
+              : "hover:text-gray-400"
+          }`}
+          onClick={() => {
+            setMobileMenuOpen(false); // Close menu after navigation
+            if (tab.name === "Logout") {
+              handleLogout();
+            } else {
+              navigate(tab.path);
+            }
+          }}
+        >
+          {tab.name}
+        </p>
+      ))}
+    </div>
+  )}
+</nav>
   );
 };
 
