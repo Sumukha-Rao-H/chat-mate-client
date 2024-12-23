@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from "firebase/firestore";
 
 const Header = () => {
@@ -101,9 +101,13 @@ const Header = () => {
     { name: "Logout", path: null },
   ];
 
-  const handleLogout = () => {
-    // Add your logout logic here
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login", { replace: true }); // Explicitly redirect to login
+    } catch (error) {
+      console.error("Logout failed:", error);
+  }
   };
 
   return (

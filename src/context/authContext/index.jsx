@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { auth } from '../../firebase/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useNavigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useContext } from "react";
+import { auth } from "../../firebase/firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const AuthContext = React.createContext();
 
@@ -20,12 +20,12 @@ export function AuthProvider({ children }) {
             if (user) {
                 setCurrentUser(user);
                 if (location.pathname === "/login" || location.pathname === "/register") {
-                    navigate("/home"); // Redirect only from login/register
+                    navigate("/home", { replace: true }); // Redirect only from login/register
                 }
             } else {
                 setCurrentUser(null);
                 if (!["/login", "/register"].includes(location.pathname)) {
-                    navigate("/login"); // Redirect to login unless on a public route
+                    navigate("/login", { replace: true }); // Redirect to login unless on a public route
                 }
             }
             setLoading(false);
@@ -36,7 +36,7 @@ export function AuthProvider({ children }) {
 
     const value = {
         currentUser,
-        isLoggedIn: currentUser !== null, // Dynamic calculation
+        isLoggedIn: !!currentUser, // Dynamic calculation
         loading,
     };
 
@@ -46,4 +46,3 @@ export function AuthProvider({ children }) {
         </AuthContext.Provider>
     );
 }
- 
