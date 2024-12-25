@@ -1,0 +1,48 @@
+root/
+│
+├── .env
+├── .gitignore
+├── package.json
+├── package-lock.json
+├── README.md
+├── tailwind.config.js
+│
+├── public/
+│   ├── favicon.ico
+│   ├── logo192.png
+│   ├── logo512.png
+│   ├── manifest.json
+│   ├── robots.txt
+│   └── uploads/
+│       └── (image files)
+│
+├── src/
+│   ├── App.js
+│   ├── index.js
+│   ├── index.css
+│   │
+│   ├── components/
+│   │   ├── Footer.jsx
+│   │   ├── Navbar.jsx
+│   │   ├── PopUpWindow.jsx
+│   │   ├── ProfileImage.jsx
+│   │   └── ui/
+│   │       ├── Buttons.jsx
+│   │       ├── Logo.jsx
+│   │       └── TextFields.jsx
+│   │
+│   ├── context/
+│   │   └── authContext/
+│   │       └── index.jsx
+│   │
+│   ├── firebase/
+│   │   ├── auth.js
+│   │   └── firebase.js
+│   │
+│   ├── pages/
+│   │   ├── HomePage.jsx
+│   │   ├── Login.jsx
+│   │   └── (other page components)
+│   │
+│   └── styles/
+│       └── AuthForm.css
