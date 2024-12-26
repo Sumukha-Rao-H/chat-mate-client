@@ -13,6 +13,7 @@
     "firebase": "^11.0.2",
     "firebase-admin": "^13.0.2",
     "login-signup-app": "file:",
+    "nodemon": "^3.1.9",
     "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -25,7 +26,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "server": "nodemon ./src/server/server.js"
   },
   "eslintConfig": {
     "extends": [
