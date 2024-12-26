@@ -7,13 +7,18 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "cloudinary": "^2.5.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
+    "express": "^4.21.2",
     "firebase": "^11.0.2",
+    "firebase-admin": "^13.0.2",
     "login-signup-app": "file:",
+    "pg": "^8.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.0.1",
     "react-scripts": "5.0.1",
+    "sequelize": "^6.37.5",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
