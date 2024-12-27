@@ -2,13 +2,6 @@ import React, { useState } from "react";
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
 
-// Mock user data
-const allUsers = [
-  { id: 6, name: "Alice Johnson" },
-  { id: 7, name: "Chris Evans" },
-  { id: 8, name: "Tom Holland" },
-];
-
 const Social = () => {
   const [activeTab, setActiveTab] = useState("Friends");
   const [loading, setLoading] = useState(false);
@@ -24,18 +17,47 @@ const Social = () => {
   ]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [debounceTimeout, setDebounceTimeout] = useState(null);
 
   const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    if (e.target.value.trim() === "") {
-      setSearchResults([]);
-      return;
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // Clear any existing timeout
+    if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
     }
-    const results = allUsers.filter((user) =>
-      user.name.toLowerCase().includes(e.target.value.toLowerCase())
-    );
-    setSearchResults(results);
+
+    const newTimeout = setTimeout(() => {
+        performSearch(query); // Call the search function with the query
+    }, 400); // Adjust the debounce delay as needed
+
+    setDebounceTimeout(newTimeout);
   };
+
+
+  const performSearch = async (query) => {
+    if (!query.trim()) {
+        setSearchResults([]); // Clear results if query is empty
+        return;
+    }
+
+    try {
+        // Send the query to the backend
+        const response = await fetch(`http://localhost:5000/api/user/search?query=${encodeURIComponent(query)}`);
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch search results");
+        }
+
+        const results = await response.json(); // Parse the JSON response
+        setSearchResults(results); // Update state with the search results
+    } catch (error) {
+        console.error("Error fetching search results:", error);
+    }
+  };
+
+
 
   const handleSendRequest = (user) => {
     alert(`Friend request sent to ${user.name}`);
@@ -71,37 +93,39 @@ const Social = () => {
             </ul>
           </div>
         );
-      case "Search":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-3">Search Users</h2>
-            <input
-              type="text"
-              placeholder="Search for users to add"
-              value={searchQuery}
-              onChange={handleSearch}
-              className="w-full p-2 border border-gray-300 rounded-md"
-            />
-            {searchResults.length > 0 && (
-              <ul className="space-y-3 mt-3">
-                {searchResults.map((user) => (
-                  <li
-                    key={user.id}
-                    className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-                  >
-                    <span>{user.name}</span>
-                    <button
-                      onClick={() => handleSendRequest(user)}
-                      className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
-                    >
-                      Send Request
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        );
+        case "Search":
+          return (
+              <div>
+                  <h2 className="text-xl font-semibold mb-3">Search Users</h2>
+                  <input
+                      type="text"
+                      placeholder="Search for users to add"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      className="w-full p-2 border border-gray-300 rounded-md"
+                  />
+                  {searchResults.length > 0 && (
+                      <ul
+                          className="space-y-3 mt-3 transition-all animate-fade-in"
+                      >
+                          {searchResults.map((user) => (
+                              <li
+                                  key={user.displayName}
+                                  className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+                              >
+                                  <span>{user.displayName}</span>
+                                  <button
+                                      onClick={() => handleSendRequest(user)}
+                                      className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                                  >
+                                      Send Request
+                                  </button>
+                              </li>
+                          ))}
+                      </ul>
+                  )}
+              </div>
+          );      
       case "Requests":
         return (
           <div>

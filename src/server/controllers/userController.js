@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const { Op } = require("sequelize");
 
 const createOrUpdateUser = async (req, res) => {
     const { uid, email, name, picture } = req.user;
@@ -18,4 +19,27 @@ const createOrUpdateUser = async (req, res) => {
     }
 };
 
-module.exports = { createOrUpdateUser };
+const searchUsers = async (req, res) => {
+    const query = req.query.query; // Extract the search query from the request
+    if (!query) {
+        return res.status(400).json({ message: "Query parameter is required" });
+    }
+
+    try {
+        // Search for users where displayName matches the query (case-insensitive)
+        const users = await User.findAll({
+            where: {
+                displayName: {
+                    [Op.iLike]: `%${query}%`, // Case-insensitive match
+                },
+            },
+            attributes: ["displayName"], // Only return displayName
+        });
+
+        res.status(200).json(users); // Send results back to the client
+    } catch (error) {
+        res.status(500).json({ message: "Error querying users", error: error.message });
+    }
+};
+
+module.exports = { createOrUpdateUser, searchUsers };
