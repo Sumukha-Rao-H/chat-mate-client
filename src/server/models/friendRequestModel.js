@@ -1,5 +1,3 @@
-const { DataTypes } = require("sequelize");
-
 module.exports = (sequelize, DataTypes) => {
     const FriendRequest = sequelize.define("FriendRequest", {
         id: {
@@ -28,6 +26,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: "pending",
         },
     }, {
+        tableName: "friendRequests", // Explicitly set the table name here
         timestamps: true,
     });
 
