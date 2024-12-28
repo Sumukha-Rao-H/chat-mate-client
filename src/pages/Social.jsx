@@ -1,8 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getAuth } from "firebase/auth";
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const Social = () => {
+
+  const auth = getAuth();
+  const curUser = auth.currentUser;
   const [activeTab, setActiveTab] = useState("Friends");
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -11,13 +15,36 @@ const Social = () => {
     { id: 2, name: "Jane Smith" },
     { id: 3, name: "Michael Brown" },
   ]);
-  const [incomingRequests, setIncomingRequests] = useState([
-    { id: 4, name: "Emily Clark" },
-    { id: 5, name: "Daniel Wilson" },
-  ]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
+  const [incomingRequests, setIncomingRequests] = useState([]);
+
+  useEffect(() => {
+    if (curUser) {
+      fetchFriendRequests(curUser);
+    }
+  }, [curUser]);
+
+  const fetchFriendRequests = async (user) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/get-requests?uid=${encodeURIComponent(user.uid)}`, {
+        method: "GET",  // This is now a GET request
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch friend requests");
+      }
+  
+      const requests = await response.json();
+      setIncomingRequests(requests);  // Update state with the fetched requests
+      setLoading(false);  // Set loading to false when the data is fetched
+    } catch (error) {
+      console.error("Error fetching friend requests:", error);
+      setLoading(false);  // Set loading to false in case of error
+    }
+  };
+  
 
   const handleSearch = (e) => {
     const query = e.target.value;
@@ -59,9 +86,28 @@ const Social = () => {
 
 
 
-  const handleSendRequest = (user) => {
-    alert(`Friend request sent to ${user.name}`);
-    setSearchResults((prev) => prev.filter((u) => u.id !== user.id)); // Remove from search results
+  const handleSendRequest = async (sender, receiver) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/friend-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ 
+          senderUid: sender.uid,
+          receiverUid: receiver.uid
+        }), 
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to send friend request");
+      }
+
+      alert(`Friend request sent to ${receiver.displayName}`);
+      setSearchResults((prev) => prev.filter((u) => u.id !== receiver.id)); // Remove from search results
+    } catch (error) {
+      console.error("Error sending friend request:", error);
+    }
   };
 
   const handleAcceptRequest = (user) => {
@@ -115,7 +161,7 @@ const Social = () => {
                               >
                                   <span>{user.displayName}</span>
                                   <button
-                                      onClick={() => handleSendRequest(user)}
+                                      onClick={() => handleSendRequest(curUser, user)}
                                       className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
                                   >
                                       Send Request
@@ -126,32 +172,34 @@ const Social = () => {
                   )}
               </div>
           );      
-      case "Requests":
-        return (
-          <div>
-            <h2 className="text-xl font-semibold mb-3">Incoming Friend Requests</h2>
-            {incomingRequests.length > 0 ? (
-              <ul className="space-y-3">
-                {incomingRequests.map((req) => (
-                  <li
-                    key={req.id}
-                    className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-                  >
-                    <span>{req.name}</span>
-                    <button
-                      onClick={() => handleAcceptRequest(req)}
-                      className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
-                    >
-                      Accept
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p>No incoming friend requests</p>
-            )}
-          </div>
-        );
+          case "Requests":
+            return (
+              <div>
+                <h2 className="text-xl font-semibold mb-3">Incoming Friend Requests</h2>
+                {incomingRequests.length > 0 ? (
+                  <ul className="space-y-3">
+                    {incomingRequests.map((req) => (
+                      <li
+                        key={req.id}
+                        className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+                      >
+                        {/* Display the sender's displayName */}
+                        <span>{req.sender.displayName}</span>
+                        
+                        <button
+                          onClick={() => handleAcceptRequest(req)}
+                          className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                        >
+                          Accept
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>No incoming friend requests</p>
+                )}
+              </div>
+            );
       default:
         return null;
     }

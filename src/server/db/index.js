@@ -21,5 +21,7 @@ User.belongsToMany(User, {
     otherKey: "user2Uid",
     as: "friends",
 });
+FriendRequest.belongsTo(User, { foreignKey: "senderUid", as: "sender" });
+FriendRequest.belongsTo(User, { foreignKey: "receiverUid", as: "receiver" });
 
 module.exports = { sequelize, User, FriendRequest, Friendship };

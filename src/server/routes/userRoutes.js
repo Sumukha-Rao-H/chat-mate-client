@@ -10,7 +10,7 @@ router.post("/user", verifyToken, createOrUpdateUser);
 router.get("/user/search", searchUsers);
 
 router.post("/friend-request", sendFriendRequest);
-router.get("/friend-requests", getFriendRequests);
+router.get("/get-requests", getFriendRequests);
 
 
 module.exports = router;

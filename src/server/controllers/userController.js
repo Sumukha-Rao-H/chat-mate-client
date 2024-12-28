@@ -1,4 +1,4 @@
-const User = require("../models/userModel");
+const { sequelize, User} = require("../db");
 const { Op } = require("sequelize");
 
 const createOrUpdateUser = async (req, res) => {
@@ -33,7 +33,7 @@ const searchUsers = async (req, res) => {
                     [Op.iLike]: `%${query}%`, // Case-insensitive match
                 },
             },
-            attributes: ["displayName"], // Only return displayName
+            attributes: ["uid","displayName","photoUrl"], // Only return displayName
         });
 
         res.status(200).json(users); // Send results back to the client

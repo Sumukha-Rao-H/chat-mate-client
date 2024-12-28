@@ -4,8 +4,6 @@ const { Op } = require('sequelize');
 exports.sendFriendRequest = async (req, res) => {
     const { senderUid, receiverUid } = req.body;
 
-    console.log("Sender UID:", senderUid, "Receiver UID:", receiverUid);
-
     try {
         if (senderUid === receiverUid) {
             return res.status(400).json({ message: "You cannot send a friend request to yourself." });
@@ -62,7 +60,7 @@ exports.sendFriendRequest = async (req, res) => {
 
 // Get Friend Requests
 exports.getFriendRequests = async (req, res) => {
-    const { uid } = req.user; // Assuming auth middleware sets `req.user`
+    const { uid } = req.query;
 
     try {
         const requests = await FriendRequest.findAll({
