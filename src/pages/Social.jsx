@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
+import NotificationPopup from "../components/ui/Notification";
 
 const Social = () => {
 
@@ -15,6 +16,7 @@ const Social = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [incomingRequests, setIncomingRequests] = useState([]);
+  const [popupMessage, setPopupMessage] = useState('');
 
   useEffect(() => {
     if (curUser) {
@@ -121,6 +123,10 @@ const Social = () => {
         throw new Error("Failed to send friend request");
       }
       setSearchResults((prev) => prev.filter((u) => u.id !== receiver.id)); // Remove from search results
+      setPopupMessage({
+        title: "Success!",
+        body: "Friend request sent.",
+      });
     } catch (error) {
       console.error("Error sending friend request:", error);
     }
@@ -147,6 +153,10 @@ const Social = () => {
       setIncomingRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
       );
+      setPopupMessage({
+        title: "Success!",
+        body: "Friend request acceepted.",
+      });
     } catch (error) {
       console.error("Error accepting friend request:", error);
     }
@@ -172,9 +182,17 @@ const Social = () => {
       setIncomingRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
       );
+      setPopupMessage({
+        title: "Success!",
+        body: "Friend request rejected.",
+      });
     } catch (error) {
       console.error("Error rejecting friend request:", error);
     }
+  };
+
+  const handleClosePopup = () => {
+    setPopupMessage(null); // Close the popup by clearing the message
   };
 
   const renderContent = () => {
@@ -323,21 +341,23 @@ const Social = () => {
 
           {isSidebarOpen && (
             <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4">
-              {["Friends", "Search", "Requests"].map((category) => (
-                <li
-                  key={category}
-                  className={`cursor-pointer p-2 rounded-md ${
-                    activeTab === category
-                      ? "bg-gray-500 text-white transition-all"
-                      : "hover:font-semibold"
-                  }`}
-                  onClick={() => {
-                    setIsSidebarOpen(false); // Close menu after selection
-                    setActiveTab(category);
-                  }}
-                >
-                  {category}
-                </li>
+                {["Friends", "Search", "Requests"].map((category) => (
+                  <ul className="list-none p-0 m-0">
+                    <li
+                      key={category}
+                      className={`cursor-pointer p-2 rounded-md ${
+                        activeTab === category
+                          ? "bg-gray-500 text-white transition-all"
+                          : "hover:font-semibold"
+                      }`}
+                      onClick={() => {
+                        setIsSidebarOpen(false); // Close menu after selection
+                        setActiveTab(category);
+                      }}
+                    >
+                      {category}
+                    </li>
+                  </ul>
               ))}
             </div>
           )}
@@ -352,6 +372,9 @@ const Social = () => {
           )}
         </div>
       </div>
+      {popupMessage && (
+        <NotificationPopup message={popupMessage} onClose={handleClosePopup} />
+      )}
       <Footer />
     </>
   );

@@ -196,20 +196,22 @@ const Settings = () => {
           {mobileMenuOpen && (
             <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4">
               {["Account", "Notifications", "Privacy"].map((category) => (
-                <li
-                  key={category}
-                  className={`cursor-pointer p-2 rounded-md ${
-                    activeCategory === category
+                <ul className="list-none p-0 m-0">
+                  <li
+                    key={category}
+                    className={`cursor-pointer p-2 rounded-md ${
+                      activeCategory === category
                       ? "bg-gray-500 text-white transition-all"
                       : "hover:font-semibold"
-                  }`}
-                  onClick={() => {
-                    setMobileMenuOpen(false); // Close menu after selection
-                    setActiveCategory(category);
-                  }}
-                >
-                  {category}
-                </li>
+                    }`}
+                    onClick={() => {
+                      setMobileMenuOpen(false); // Close menu after selection
+                      setActiveCategory(category);
+                    }}
+                    >
+                    {category}
+                  </li>
+                </ul>
               ))}
             </div>
           )}
