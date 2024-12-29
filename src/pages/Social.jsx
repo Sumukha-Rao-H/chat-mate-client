@@ -120,8 +120,6 @@ const Social = () => {
       if (!response.ok) {
         throw new Error("Failed to send friend request");
       }
-
-      alert(`Friend request sent to ${receiver.displayName}`);
       setSearchResults((prev) => prev.filter((u) => u.id !== receiver.id)); // Remove from search results
     } catch (error) {
       console.error("Error sending friend request:", error);
@@ -193,7 +191,6 @@ const Social = () => {
                 >
                   <span>{friend.displayName}</span>
                   <button
-                    onClick={() => alert(`Options for ${friend.name}`)}
                     className="text-gray-500 hover:text-gray-800"
                   >
                     &#8230;
