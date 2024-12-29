@@ -1,6 +1,6 @@
 const express = require("express");
 const { createOrUpdateUser, searchUsers } = require("../controllers/userController");
-const { sendFriendRequest, getFriendRequests } = require("../controllers/socialController");
+const { sendFriendRequest, getFriendRequests, acceptFriendRequest } = require("../controllers/socialController");
 const verifyToken = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -10,6 +10,7 @@ router.post("/user", verifyToken, createOrUpdateUser);
 router.get("/user/search", searchUsers);
 
 router.post("/friend-request", sendFriendRequest);
+router.post("/accept-friend-request", acceptFriendRequest);
 router.get("/get-requests", getFriendRequests);
 
 

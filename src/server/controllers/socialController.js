@@ -65,11 +65,38 @@ exports.getFriendRequests = async (req, res) => {
     try {
         const requests = await FriendRequest.findAll({
             where: { receiverUid: uid, status: "pending" },
-            include: [{ model: User, as: "sender", attributes: ["uid", "displayName", "photoUrl"] }],
+            include: [{ model: User, as: "sender", attributes: ["id","uid", "displayName", "photoUrl"] }],
         });
 
         res.status(200).json(requests);
     } catch (error) {
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
+
+exports.acceptFriendRequest = async (req, res) => {
+    const { requestId } = req.body; // `requestId` is the ID of the FriendRequest to be accepted
+
+    try {
+        // Find the friend request by ID
+        const friendRequest = await FriendRequest.findOne({ where: { id: requestId, status: "pending" } });
+
+        if (!friendRequest) {
+            return res.status(404).json({ message: "Friend request not found or already handled." });
+        }
+
+        // Update the status to "accepted"
+        await friendRequest.update({ status: "accepted" });
+
+        // Create a new friendship
+        await Friendship.create({
+            user1Uid: friendRequest.senderUid,
+            user2Uid: friendRequest.receiverUid,
+        });
+
+        res.status(200).json({ message: "Friend request accepted successfully." });
+    } catch (error) {
+        console.error("Error accepting friend request:", error);
         res.status(500).json({ message: "Internal server error.", error: error.message });
     }
 };
