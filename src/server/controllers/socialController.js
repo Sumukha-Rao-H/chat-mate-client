@@ -74,6 +74,7 @@ exports.getFriendRequests = async (req, res) => {
     }
 };
 
+//accept friend request
 exports.acceptFriendRequest = async (req, res) => {
     const { requestId } = req.body; // `requestId` is the ID of the FriendRequest to be accepted
 
@@ -97,6 +98,44 @@ exports.acceptFriendRequest = async (req, res) => {
         res.status(200).json({ message: "Friend request accepted successfully." });
     } catch (error) {
         console.error("Error accepting friend request:", error);
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
+
+//decline friend request
+
+
+//fetch friends
+exports.fetchFriends = async (req, res) => {
+    const { uid } = req.query; // Assume `uid` is the current user's UID
+
+    try {
+        // Find friendships where the current user is either user1 or user2
+        const friendships = await Friendship.findAll({
+            where: {
+                [Op.or]: [
+                    { user1Uid: uid },
+                    { user2Uid: uid },
+                ],
+            },
+        });
+
+        // Extract the UIDs of the friends
+        const friendUids = friendships.map(friendship =>
+            friendship.user1Uid === uid ? friendship.user2Uid : friendship.user1Uid
+        );
+
+        // Fetch user details for the friends
+        const friends = await User.findAll({
+            where: {
+                uid: { [Op.in]: friendUids },
+            },
+            attributes: ["uid", "displayName", "photoUrl"], // Fetch necessary attributes
+        });
+
+        res.status(200).json(friends);
+    } catch (error) {
+        console.error("Error fetching friends:", error);
         res.status(500).json({ message: "Internal server error.", error: error.message });
     }
 };
