@@ -10,11 +10,7 @@ const Social = () => {
   const [activeTab, setActiveTab] = useState("Friends");
   const [loading, setLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [friends, setFriends] = useState([
-    { id: 1, name: "John Doe" },
-    { id: 2, name: "Jane Smith" },
-    { id: 3, name: "Michael Brown" },
-  ]);
+  const [friends, setFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
@@ -23,8 +19,30 @@ const Social = () => {
   useEffect(() => {
     if (curUser) {
       fetchFriendRequests(curUser);
+      fetchFriends(curUser);
     }
   }, [curUser]);
+
+
+  const fetchFriends = async (user) => {
+    try {
+      setLoading(true); // Set loading to true while fetching
+      const response = await fetch(`http://localhost:5000/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch friends list");
+      }
+
+      const friendsList = await response.json();
+      setFriends(friendsList); // Update the friends state
+      setLoading(false); // Set loading to false when data is fetched
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      setLoading(false); // Set loading to false in case of error
+    }
+  };
 
   const fetchFriendRequests = async (user) => {
     try {
@@ -110,9 +128,55 @@ const Social = () => {
     }
   };
 
-  const handleAcceptRequest = (user) => {
-    setFriends((prev) => [...prev, user]);
-    setIncomingRequests((prev) => prev.filter((req) => req.id !== user.id)); // Remove from requests
+  const handleAcceptRequest = async (requestId) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/accept-friend-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requestId }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to accept friend request");
+      }
+  
+      const result = await response.json();
+      console.log(result.message);
+  
+      // Update the state to remove the accepted request
+      setIncomingRequests((prevRequests) =>
+        prevRequests.filter((req) => req.id !== requestId)
+      );
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+    }
+  };
+  const handleRejectRequest = async (requestId) => {
+    try {
+      const response = await fetch("http://localhost:5000/api/reject-friend-request", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requestId }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to reject friend request");
+      }
+  
+      const result = await response.json();
+      console.log(result.message);
+  
+      // Update the state to remove the rejected request
+      setIncomingRequests((prevRequests) =>
+        prevRequests.filter((req) => req.id !== requestId)
+      );
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+    }
   };
 
   const renderContent = () => {
@@ -127,7 +191,7 @@ const Social = () => {
                   key={friend.id}
                   className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
                 >
-                  <span>{friend.name}</span>
+                  <span>{friend.displayName}</span>
                   <button
                     onClick={() => alert(`Options for ${friend.name}`)}
                     className="text-gray-500 hover:text-gray-800"
@@ -185,13 +249,22 @@ const Social = () => {
                       >
                         {/* Display the sender's displayName */}
                         <span>{req.sender.displayName}</span>
+                        <div className="flex items-center space-x-3">
+
                         
-                        <button
-                          onClick={() => handleAcceptRequest(req)}
-                          className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
-                        >
-                          Accept
-                        </button>
+                          <button
+                            onClick={() => handleAcceptRequest(req.id)}
+                            className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={() => handleRejectRequest(req.id)}
+                            className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                          >
+                            Reject
+                          </button>
+                        </div>
                       </li>
                     ))}
                   </ul>

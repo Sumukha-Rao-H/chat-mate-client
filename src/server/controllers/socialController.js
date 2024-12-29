@@ -65,7 +65,8 @@ exports.getFriendRequests = async (req, res) => {
     try {
         const requests = await FriendRequest.findAll({
             where: { receiverUid: uid, status: "pending" },
-            include: [{ model: User, as: "sender", attributes: ["id","uid", "displayName", "photoUrl"] }],
+            attributes: ["id"],
+            include: [{ model: User, as: "sender", attributes: ["uid", "displayName", "photoUrl"] }],
         });
 
         res.status(200).json(requests);
@@ -103,7 +104,26 @@ exports.acceptFriendRequest = async (req, res) => {
 };
 
 //decline friend request
+exports.rejectFriendRequest = async (req, res) => {
+    const { requestId } = req.body; // `requestId` is the ID of the FriendRequest to be accepted
 
+    try {
+        // Find the friend request by ID
+        const friendRequest = await FriendRequest.findOne({ where: { id: requestId, status: "pending" } });
+
+        if (!friendRequest) {
+            return res.status(404).json({ message: "Friend request not found or already handled." });
+        }
+
+        // Update the status to "rejected"
+        await friendRequest.update({ status: "rejected" });
+
+        res.status(200).json({ message: "Friend request rejected successfully." });
+    } catch (error) {
+        console.error("Error accepting friend request:", error);
+        res.status(500).json({ message: "Internal server error.", error: error.message });
+    }
+};
 
 //fetch friends
 exports.fetchFriends = async (req, res) => {
