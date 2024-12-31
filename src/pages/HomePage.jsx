@@ -5,6 +5,7 @@ import Footer from "../components/Footer";
 import socket from "../socket"; // Import the socket instance
 import { encryptMessage, decryptMessage } from "../functions/encryption"
 import { verifyOrGenerateKeysForUser, getPrivateKey } from "../functions/generateKeyPair"
+import { PhoneIcon, VideoCameraIcon, PaperClipIcon } from '@heroicons/react/24/outline';
 
 const Home = () => {
     const auth = getAuth();
@@ -154,7 +155,12 @@ const Home = () => {
                                     <>
                                         <div className="bg-white px-4 py-3 border-b border-gray-300 flex justify-between items-center">
                                             <div className="font-bold text-gray-800">{activeConversation.displayName}</div>
+                                            <div className="flex items-center space-x-4">
+                                                <PhoneIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
+                                                <VideoCameraIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
+                                            </div>
                                         </div>
+                                    
                                         <div className="flex-1 bg-gray-50 px-6 py-4 overflow-y-auto">
                                             {messages.map((msg, index) => (
                                                 <div key={index} className={`mb-2 ${msg.senderId === curUser.uid ? "text-right" : "text-left"}`}>
@@ -168,7 +174,10 @@ const Home = () => {
                                                 </div>
                                             ))}
                                         </div>
-                                        <div className="border-t border-gray-300 p-4 flex gap-4 mt-auto">
+                                    
+                                        <div className="border-t border-gray-300 p-4 flex gap-4 mt-auto items-center">
+                                            {/* Attachment Icon */}
+                                            <PaperClipIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
                                             <input
                                                 type="text"
                                                 value={newMessage}
