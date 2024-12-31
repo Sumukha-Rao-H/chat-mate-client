@@ -16,6 +16,10 @@ module.exports = (sequelize, DataTypes) => {
         photoUrl: {
             type: DataTypes.TEXT,
         },
+        publicKey: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+        }
     }, {
         timestamps: true,
     });

@@ -10,10 +10,10 @@ module.exports = (io) => {
         });
 
         // Handle sending messages
-        socket.on("sendMessage", ({ senderId, receiverId, message }) => {
+        socket.on("sendMessage", ({ senderId, receiverId, encryptedMessage }) => {
             const roomId = [senderId, receiverId].sort().join("_");
-            io.to(roomId).emit("receiveMessage", { senderId, message });
-            //console.log(`Message from ${senderId} to ${receiverId}: ${message}`);
+            io.to(roomId).emit("receiveMessage", { senderId, encryptedMessage });
+            //console.log(`${encryptedMessage}`);
         });
 
         // Handle disconnection

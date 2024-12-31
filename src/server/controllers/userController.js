@@ -42,4 +42,45 @@ const searchUsers = async (req, res) => {
     }
 };
 
-module.exports = { createOrUpdateUser, searchUsers };
+//store public key into db
+const storePublicKey = async (req, res) => {
+    const { uid, publicKey } = req.body;
+
+    try {
+        const user = await User.findOne({ where: { uid } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        user.publicKey = publicKey;
+        await user.save();
+
+        res.status(200).json({ message: "Public key stored successfully" });
+    } catch (error) {
+        console.error("Error storing public key:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// Retrieve the public key for a user
+const getPublicKey = async (req, res) => {
+    const { uid } = req.params;
+
+    try {
+        const user = await User.findOne({ where: { uid } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (!user.publicKey) {
+            return res.status(404).json({ message: "Public key not set for this user" });
+        }
+
+        res.status(200).json({ publicKey: user.publicKey });
+    } catch (error) {
+        console.error("Error retrieving public key:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+module.exports = { createOrUpdateUser, searchUsers, storePublicKey, getPublicKey };

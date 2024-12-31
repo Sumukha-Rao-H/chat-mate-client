@@ -3,6 +3,8 @@ import { getAuth } from "firebase/auth";
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
 import socket from "../socket"; // Import the socket instance
+import { encryptMessage, decryptMessage } from "../functions/encryption"
+import { verifyOrGenerateKeysForUser, getPrivateKey } from "../functions/generateKeyPair"
 
 const Home = () => {
     const auth = getAuth();
@@ -16,19 +18,29 @@ const Home = () => {
 
     useEffect(() => {
         if (curUser) {
+            verifyOrGenerateKeysForUser(curUser.uid); // Ensure the user has a key pair
             fetchFriends(curUser);
         }
 
         // Listen for incoming messages
-        socket.on("receiveMessage", (message) => {
-            // Only add the message if it's from another user
-            if (message.senderId !== curUser.uid) {
-                setMessages((prevMessages) => [...prevMessages, message]);
+        socket.on("receiveMessage", async (message) => {
+            try {
+                if (message.senderId !== curUser.uid) {
+                    // Decrypt the message using the private key
+                    const privateKey = await getPrivateKey(curUser.uid);
+                    const decryptedMessage = await decryptMessage(privateKey, message.encryptedMessage);
+                    setMessages((prevMessages) => [
+                        ...prevMessages,
+                        { ...message, message: decryptedMessage }, // Update with decrypted content
+                    ]);
+                }
+            } catch (error) {
+                console.error("Error decrypting message:", error);
             }
         });
 
         return () => {
-            socket.off("receiveMessage"); // Clean up event listener
+            socket.off("receiveMessage");
         };
     }, [curUser]);
 
@@ -63,21 +75,33 @@ const Home = () => {
         });
     };
 
-    const handleSendMessage = () => {
+    const handleSendMessage = async () => {
         if (newMessage.trim() === "") return;
 
-        const message = {
-            senderId: curUser.uid,
-            receiverId: activeConversation.uid,
-            message: newMessage,
-        };
+        try {
+            // Encrypt the message with the recipient's public key
+            const response = await fetch(`http://localhost:5000/api/getPublicKey/${activeConversation.uid}`);
+            if (!response.ok) throw new Error("Failed to fetch public key");
+            const { publicKey } = await response.json();
+            const encryptedMessage = await encryptMessage(publicKey, newMessage);
 
-        // Send the message via Socket.IO
-        socket.emit("sendMessage", message);
+            const message = {
+                senderId: curUser.uid,
+                receiverId: activeConversation.uid,
+                encryptedMessage,
+            };
 
-        // Add the message to local state
-        setMessages((prevMessages) => [...prevMessages, message]);
-        setNewMessage(""); // Clear input field
+            socket.emit("sendMessage", message);
+
+            // Add encrypted message to local state (display original content for the sender)
+            setMessages((prevMessages) => [
+                ...prevMessages,
+                { ...message, message: newMessage },
+            ]);
+            setNewMessage("");
+        } catch (error) {
+            console.error("Error sending message:", error);
+        }
     };
 
     const handleBackToConversations = () => {
