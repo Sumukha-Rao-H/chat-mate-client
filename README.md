@@ -1,18 +1,21 @@
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
 ## Available Scripts
 
 In the project directory, you can run:
 
 ### `npm start`
 
-Runs the app in the development mode.\
+Runs the frontend app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
 The page will reload when you make changes.\
 You may also see any lint errors in the console.
+
+### `npm run server`
+
+Runs the backend server.\
+(http://localhost:5000)
+
+The server will restart when you make changes.\
 
 ### `npm test`
 
@@ -29,6 +32,7 @@ Your app is ready to be deployed!
 
 See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
 
-### firebase api
+### firebase and postgres setup
 
-Create a firebase.js file in the directory "/src/firebase/firebase.js" and paste your firebase api_key and other info in it.
+Enter your firebase secrets and postgres secrets and other info in the .env file in the root directory.
+

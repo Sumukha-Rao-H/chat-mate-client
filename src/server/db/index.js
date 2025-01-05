@@ -11,6 +11,7 @@ const sequelize = new Sequelize(process.env.DATABASE_NAME, process.env.DATABASE_
 const User = require("../models/userModel")(sequelize, DataTypes);
 const FriendRequest = require("../models/friendRequestModel")(sequelize, DataTypes);
 const Friendship = require("../models/friendshipModel")(sequelize, DataTypes);
+const Message = require("../models/messageModel")(sequelize, DataTypes);
 
 // Define associations
 User.hasMany(FriendRequest, { foreignKey: "senderUid", as: "sentRequests" });
@@ -24,4 +25,4 @@ User.belongsToMany(User, {
 FriendRequest.belongsTo(User, { foreignKey: "senderUid", as: "sender" });
 FriendRequest.belongsTo(User, { foreignKey: "receiverUid", as: "receiver" });
 
-module.exports = { sequelize, User, FriendRequest, Friendship };
+module.exports = { sequelize, User, FriendRequest, Friendship, Message };
