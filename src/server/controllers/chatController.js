@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 
 
 const getMessages = async (req, res) => {
-    const { userId1, userId2, page = 1, limit = 20 } = req.query;
+    const { userId1, userId2, page , limit = 20 } = req.query;
   
     console.log('Fetching messages for:', userId1, userId2); // Log the incoming request parameters
   

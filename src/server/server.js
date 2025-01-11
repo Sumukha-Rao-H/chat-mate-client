@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { sequelize, User, FriendRequest, Friendship } = require("./db"); // Import models
+const { sequelize, User, FriendRequest, Friendship, Message } = require("./db"); // Import models
 const userRoutes = require("./routes/userRoutes");
 const http = require("http");
 const { Server } = require("socket.io");

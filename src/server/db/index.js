@@ -13,6 +13,7 @@ const FriendRequest = require("../models/friendRequestModel")(sequelize, DataTyp
 const Friendship = require("../models/friendshipModel")(sequelize, DataTypes);
 const Message = require("../models/messageModel")(sequelize, DataTypes);
 
+
 // Define associations
 User.hasMany(FriendRequest, { foreignKey: "senderUid", as: "sentRequests" });
 User.hasMany(FriendRequest, { foreignKey: "receiverUid", as: "receivedRequests" });

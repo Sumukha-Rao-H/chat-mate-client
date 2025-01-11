@@ -35,8 +35,6 @@ async function decryptMessage(privateKey, encryptedMessage) {
     
     if (!privateKey || !encryptedMessage) {
         console.error("Private key or encrypted message is undefined or null.");
-        console.log("Private Key:", privateKey);
-        console.log("Encrypted Message:", encryptedMessage);
         return;
     }
     

@@ -13,7 +13,11 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        message: {
+        messageS: {
+            type: DataTypes.TEXT,
+            allowNull: false,
+        },
+        messageR: {
             type: DataTypes.TEXT,
             allowNull: false,
         },
