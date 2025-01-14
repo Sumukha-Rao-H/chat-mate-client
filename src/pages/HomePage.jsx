@@ -5,7 +5,7 @@
     import socket from "../socket"; // Import the socket instance
     import { encryptMessage, decryptMessage } from "../functions/encryption"
     import { verifyOrGenerateKeysForUser, getPrivateKey } from "../functions/generateKeyPair"
-    import { PhoneIcon, VideoCameraIcon, PaperClipIcon } from '@heroicons/react/24/outline';
+    import { PhoneIcon, VideoCameraIcon, PaperClipIcon, MicrophoneIcon, SpeakerXMarkIcon, PhoneXMarkIcon } from '@heroicons/react/24/outline';
 
     const Home = () => {
         const auth = getAuth();
@@ -20,6 +20,16 @@
         const [page, setPage] = useState(1);
         const chatContainerRef = useRef(null);
         const lastMessageRef = useRef(null);
+        const [isVideoCalling, setIsVideoCalling] = useState(false);
+        const [isAudioCalling, setIsAudioCalling] = useState(false);
+        const [isMuted, setIsMuted] = useState(false);
+        const [isVideoOff, setIsVideoOff] = useState(false);
+
+        const handleMute = () => {
+            setIsMuted((prevState) => !prevState); // Toggle mute state
+        };
+
+        const handleTurnOffVideo = () => setIsVideoOff((prev) => !prev);
 
         useEffect(() => {
             if (curUser) {
@@ -215,6 +225,21 @@
             return <div>Loading...</div>;
         }
 
+        const handleVideoCall = () => {
+            setIsVideoCalling(true);
+            setIsAudioCalling(false); // Ensure only one type of call is active
+        };
+        
+        const handleAudioCall = () => {
+            setIsAudioCalling(true);
+            setIsVideoCalling(false); // Ensure only one type of call is active
+        };
+        
+        const handleEndCall = () => {
+            setIsVideoCalling(false);
+            setIsAudioCalling(false);
+        };
+
         return (
             <>
                 <Header />
@@ -261,31 +286,121 @@
                                             <div className="bg-white px-4 py-3 border-b border-gray-300 flex justify-between items-center">
                                                 <div className="font-bold text-gray-800">{activeConversation.displayName}</div>
                                                 <div className="flex items-center space-x-4">
-                                                    <PhoneIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
-                                                    <VideoCameraIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
+                                                    <PhoneIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" onClick={handleAudioCall} />
+                                                    <VideoCameraIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" onClick={handleVideoCall} />
                                                 </div>
                                             </div>
+
+
+                                            {/* Audio call bar */}
+                                            {isAudioCalling && (
+                                                <div className="bg-gray-100 border-t border-gray-300 px-4 py-2 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-gray-700">You are on a call</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Mute Button */}
+                                                        <button
+                                                            onClick={handleMute}
+                                                            className={`px-3 py-1 rounded flex items-center gap-2 ${
+                                                                isMuted ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                            } hover:bg-red-600 transition-all`}
+                                                        >
+                                                            <MicrophoneIcon className="w-5 h-5" />
+                                                        </button>
+
+                                                        {/* End Call Button */}
+                                                        <button
+                                                            onClick={handleEndCall}
+                                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-all flex items-center gap-2"
+                                                        >
+                                                            <PhoneXMarkIcon className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
 
                                             {/* Chat Content (Scrollable) */}
                                             <div
                                                 className="flex-grow bg-gray-50 px-6 py-3 overflow-y-scroll max-h-[calc(100vh-233px)]"
-                                                onScroll={handleScroll}
-                                                ref={chatContainerRef}
                                             >
-                                                {messages.map((msg, index) => (
-                                                    <div key={index} className={`mb-2 ${msg.senderId === curUser.uid ? "text-right" : "text-left"}`}>
-                                                        <span
-                                                            className={`inline-block px-4 py-2 rounded-lg ${
-                                                                msg.senderId === curUser.uid ? "bg-gray-500 text-white" : "bg-gray-300"
-                                                            }`}
-                                                        >
-                                                            {msg.message}
-                                                        </span>
+                                                {isVideoCalling ? (
+                                                    <div className="flex flex-col justify-between h-full">
+                                                        {/* Video Call UI */}
+                                                            <div className="flex justify-center items-center w-full h-[80%] p-4">
+                                                                <div className="relative w-full max-w-[700px] h-full">
+                                                                    {/* Other User's Video - Larger Window */}
+                                                                    <div className="w-full h-full bg-gray-600 flex justify-center items-center rounded-lg shadow-lg">
+                                                                        <p className="text-xl text-white">Other User</p>
+                                                                    </div>
+
+                                                                    {/* Self Video as a Small Rectangle at the Bottom-Right with Thin Border */}
+                                                                    <div className="absolute bottom-4 right-4 w-[20%] h-[20%] bg-gray-600 flex justify-center items-center border-2 border-white rounded-md shadow-md">
+                                                                        <p className="text-xs text-white">You</p>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                        {/* Controls */}
+                                                        <div className=" border-gray-300 px-4 py-2 flex items-center justify-center">
+                                                            <div className="flex justify-center items-center gap-4">
+                                                                {/* Mute Button */}
+                                                                <button
+                                                                    onClick={handleMute}
+                                                                    className={`p-3 rounded-full ${
+                                                                        isMuted ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                                    } hover:bg-gray-300 transition-all`}
+                                                                >
+                                                                    <MicrophoneIcon className="w-6 h-6" />
+                                                                </button>
+
+                                                                {/* Turn Off Video Button */}
+                                                                <button
+                                                                    onClick={handleTurnOffVideo}
+                                                                    className={`p-3 rounded-full ${
+                                                                        isVideoOff ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                                    } hover:bg-gray-300 transition-all`}
+                                                                >
+                                                                    <VideoCameraIcon className="w-6 h-6" />
+                                                                </button>
+
+                                                                {/* End Call Button */}
+                                                                <button
+                                                                    onClick={handleEndCall}
+                                                                    className="p-3 rounded-full bg-red-500 text-white hover:bg-gray-300 transition-all"
+                                                                    >
+                                                                    <PhoneXMarkIcon className="w-6 h-6 inline-block" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                ))}
+                                                ) : (
+                                                    // Chat Content
+                                                    <div
+                                                        onScroll={handleScroll}
+                                                        ref={chatContainerRef}
+                                                    >
+                                                        {messages.map((msg, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className={`mb-2 ${msg.senderId === curUser.uid ? "text-right" : "text-left"}`}
+                                                            >
+                                                                <span
+                                                                    className={`inline-block px-4 py-2 rounded-lg ${
+                                                                        msg.senderId === curUser.uid
+                                                                            ? "bg-gray-500 text-white"
+                                                                            : "bg-gray-300"
+                                                                    }`}
+                                                                >
+                                                                    {msg.message}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                        
+                                                    </div>
+                                                )}
                                                 <div ref={lastMessageRef}></div>
                                             </div>
-
                                             {/* Chat Footer */}
                                             <div className="border-t border-gray-300 p-4 flex gap-4 items-center fixed bottom-16 w-3/4 bg-white">
                                                 {/* Attachment Icon */}
@@ -324,7 +439,10 @@
                                 {/* Chat Window with Back Button */}
                                 {activeConversation ? (
                                     <>
-                                        <div className="bg-white px-6 py-4 border-b border-gray-300 flex items-center space-x-4">
+                                        {/* Mobile Chat Header */}
+                                        <div 
+                                            className="bg-white px-6 py-4 border-b border-gray-300 flex items-center justify-between space-x-4"
+                                        >
                                             <button
                                                 onClick={handleBackToConversations}
                                                 className="text-2xl font-semibold text-gray-800 hover:text-gray-600 transition-all"
@@ -332,11 +450,55 @@
                                                 &#8592; {/* Left Arrow */}
                                             </button>
                                             <div className="font-semibold text-xl text-gray-800">{activeConversation.displayName}</div>
+
+                                            {/* Audio/Video Call Buttons */}
+                                            <div className="flex items-center space-x-4">
+                                                <PhoneIcon
+                                                    className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700"
+                                                    onClick={handleAudioCall}
+                                                />
+                                                <VideoCameraIcon
+                                                    className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700"
+                                                    onClick={handleVideoCall}
+                                                />
+                                            </div>
                                         </div>
+
+                                        {isAudioCalling && (
+                                                <div className="bg-gray-100 border-t border-gray-300 px-4 py-2 flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-gray-700">You are on a call</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Mute Button */}
+                                                        <button
+                                                            onClick={handleMute}
+                                                            className={`px-3 py-1 rounded flex items-center gap-2 ${
+                                                                isMuted ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                            } hover:bg-red-600 transition-all`}
+                                                        >
+                                                            <MicrophoneIcon className="w-5 h-5" />
+                                                        </button>
+
+                                                        {/* End Call Button */}
+                                                        <button
+                                                            onClick={handleEndCall}
+                                                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition-all flex items-center gap-2"
+                                                        >
+                                                            <PhoneXMarkIcon className="w-5 h-5" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                        )}
+
                                         {/* Flex container for messages and input field */}
                                         <div className="flex flex-col flex-grow bg-gray-50 px-6 py-4">
                                             {/* Messages */}
-                                            <div className="flex-1 overflow-y-auto space-y-4">
+                                            <div 
+                                                className="flex-1 overflow-y-auto space-y-4 max-h-[calc(100vh-233px)]"
+                                                onScroll={handleScroll}
+                                                ref={chatContainerRef}
+                                            >   
                                                 {messages.map((msg, index) => (
                                                     <div
                                                         key={index}
@@ -353,7 +515,9 @@
                                                         </span>
                                                     </div>
                                                 ))}
+                                                <div ref={lastMessageRef}></div>
                                             </div>
+
                                             {/* Input and Send Button */}
                                             <div className="border-t border-gray-300 p-4 flex gap-4 mt-auto">
                                                 <input
@@ -376,6 +540,54 @@
                                                 </button>
                                             </div>
                                         </div>
+
+                                        {/* Video Call UI (Mobile) */}
+                                        {isVideoCalling && (
+                                            <div className="absolute inset-0 flex justify-center items-center w-full h-full bg-black bg-opacity-50">
+                                                <div className="relative w-full max-w-[700px] h-[80%]">
+                                                    {/* Other User's Video - Larger Window */}
+                                                    <div className="w-full h-full bg-gray-600 flex justify-center items-center rounded-lg shadow-lg">
+                                                        <p className="text-xl text-white">Other User</p>
+                                                    </div>
+
+                                                    {/* Self Video as a Small Rectangle at the Bottom-Right with Thin Border */}
+                                                    <div className="absolute bottom-4 right-4 w-[20%] h-[20%] bg-gray-600 flex justify-center items-center border-2 border-white rounded-md shadow-md">
+                                                        <p className="text-xs text-white">You</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Video Call Controls */}
+                                                <div className="absolute bottom-0 left-0 w-full bg-gray-800 bg-opacity-75 px-4 py-2 flex justify-center items-center gap-4">
+                                                    {/* Mute Button */}
+                                                    <button
+                                                        onClick={handleMute}
+                                                        className={`p-3 rounded-full ${
+                                                            isMuted ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                        } hover:bg-gray-300 transition-all`}
+                                                    >
+                                                        <MicrophoneIcon className="w-6 h-6" />
+                                                    </button>
+
+                                                    {/* Turn Off Video Button */}
+                                                    <button
+                                                        onClick={handleTurnOffVideo}
+                                                        className={`p-3 rounded-full ${
+                                                            isVideoOff ? "bg-red-500 text-white" : "bg-gray-200 text-gray-700"
+                                                        } hover:bg-gray-300 transition-all`}
+                                                    >
+                                                        <VideoCameraIcon className="w-6 h-6" />
+                                                    </button>
+
+                                                    {/* End Call Button */}
+                                                    <button
+                                                        onClick={handleEndCall}
+                                                        className="p-3 rounded-full bg-red-500 text-white hover:bg-gray-300 transition-all"
+                                                    >
+                                                        <PhoneXMarkIcon className="w-6 h-6 inline-block" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
                                     </>
                                 ) : (
                                     <div className="w-full bg-gray-200 border-b border-gray-300 md:hidden">
@@ -405,6 +617,7 @@
                                     </div>
                                 )}
                             </div>
+
                         </div>
                     </div>
                     <Footer />
