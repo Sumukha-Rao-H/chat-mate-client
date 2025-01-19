@@ -16,7 +16,7 @@ const Sidebar = ({handleSelectConversation}) => {
 	const fetchFriends = async (userId) => {
 		try {
 			setLoading(true);
-			const response = await fetch(`http://localhost:5000/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
+			const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
 				method: "GET",
 			});
 
