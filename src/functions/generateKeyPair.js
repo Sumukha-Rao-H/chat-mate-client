@@ -45,13 +45,14 @@ async function verifyOrGenerateKeysForUser(uid) {
 
 async function storePublicKey(uid, publicKey) {
     try {
-        const response = await fetch(`${process.env.SERVER_URL}/api/storePublicKey`, {
+        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/storePublicKey`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({ uid, publicKey }),
         });
+        console.log("response", response);
 
         if (!response.ok) {
             throw new Error(`Failed to store public key: ${response.statusText}`);
