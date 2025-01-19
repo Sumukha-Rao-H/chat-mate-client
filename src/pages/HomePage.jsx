@@ -64,7 +64,7 @@
             try {
                 const privateKey = await getPrivateKey(curUser.uid);
                 const response = await fetch(
-                    `${process.env.SERVER_URL}/api/messages?userId1=${curUser.uid}&userId2=${activeConversation.uid}&page=${page}&limit=20`
+                    `${process.env.REACT_APP_SERVER_URL}/api/messages?userId1=${curUser.uid}&userId2=${activeConversation.uid}&page=${page}&limit=20`
                 );
                 if (!response.ok) throw new Error("Failed to fetch messages");
                 const data = await response.json();
@@ -151,12 +151,12 @@
         
             try {
                 // Fetch the recipient's public key
-                const receiverKeyResponse = await fetch(`${process.env.SERVER_URL}/api/getPublicKey/${activeConversation.uid}`);
+                const receiverKeyResponse = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${activeConversation.uid}`);
                 if (!receiverKeyResponse.ok) throw new Error("Failed to fetch receiver's public key");
                 const { publicKey: receiverPublicKey } = await receiverKeyResponse.json();
         
                 // Fetch the sender's public key
-                const senderKeyResponse = await fetch(`${process.env.SERVER_URL}/api/getPublicKey/${curUser.uid}`);
+                const senderKeyResponse = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${curUser.uid}`);
                 if (!senderKeyResponse.ok) throw new Error("Failed to fetch sender's public key");
                 const { publicKey: senderPublicKey } = await senderKeyResponse.json();
         

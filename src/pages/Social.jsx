@@ -29,7 +29,7 @@ const Social = () => {
   const fetchFriends = async (user) => {
     try {
       setLoading(true); // Set loading to true while fetching
-      const response = await fetch(`${process.env.SERVER_URL}/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
         method: "GET",
       });
 
@@ -48,7 +48,7 @@ const Social = () => {
 
   const fetchFriendRequests = async (user) => {
     try {
-      const response = await fetch(`${process.env.SERVER_URL}/api/get-requests?uid=${encodeURIComponent(user.uid)}`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-requests?uid=${encodeURIComponent(user.uid)}`, {
         method: "GET",  // This is now a GET request
       });
   
@@ -91,7 +91,7 @@ const Social = () => {
 
     try {
         // Send the query to the backend
-        const response = await fetch(`${process.env.SERVER_URL}/api/user/search?query=${encodeURIComponent(query)}`);
+        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/search?query=${encodeURIComponent(query)}`);
 
         if (!response.ok) {
             throw new Error("Failed to fetch search results");
@@ -108,7 +108,7 @@ const Social = () => {
 
   const handleSendRequest = async (sender, receiver) => {
     try {
-      const response = await fetch(`${process.env.SERVER_URL}/api/friend-request`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/friend-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -134,7 +134,7 @@ const Social = () => {
 
   const handleAcceptRequest = async (requestId) => {
     try {
-      const response = await fetch(`${process.env.SERVER_URL}/api/accept-friend-request`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/accept-friend-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -163,7 +163,7 @@ const Social = () => {
   };
   const handleRejectRequest = async (requestId) => {
     try {
-      const response = await fetch(`${process.env.SERVER_URL}/api/reject-friend-request`, {
+      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/reject-friend-request`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

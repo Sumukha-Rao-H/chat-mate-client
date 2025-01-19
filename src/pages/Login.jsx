@@ -17,7 +17,7 @@ const Login = () => {
         try {
             const idToken = await user.getIdToken(); // Get the Firebase ID token
     
-            const response = await fetch(`${process.env.SERVER_URL}/api/user`, {
+            const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
