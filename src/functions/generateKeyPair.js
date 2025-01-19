@@ -45,7 +45,7 @@ async function verifyOrGenerateKeysForUser(uid) {
 
 async function storePublicKey(uid, publicKey) {
     try {
-        const response = await fetch("http://localhost:5000/api/storePublicKey", {
+        const response = await fetch(`${process.env.SERVER_URL}/api/storePublicKey`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

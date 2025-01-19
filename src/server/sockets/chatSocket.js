@@ -7,7 +7,7 @@ module.exports = (io) => {
 
         // Join a room for a conversation
         socket.on("joinRoom", async ({ senderId, receiverId }) => {
-            const roomId = [senderId, receiverId].sort().join("_"); // Unique room ID
+            const roomId =[ senderId, receiverId].sort().join("_"); // Unique room ID
             socket.join(roomId);
             //console.log(`${socket.id} joined room: ${roomId}`);
 
@@ -46,6 +46,23 @@ module.exports = (io) => {
             } catch (error) {
                 console.error("Failed to save message:", error);
             }
+        });
+
+        socket.on("voiceCall", ({ roomId, signalData }) => {
+            // Relay the signal data to the other peer in the room
+            socket.to(roomId).emit("voiceCall", { signalData, from: socket.id });
+        });
+
+        // Handle voice call answer
+        socket.on("answerCall", ({ roomId, signalData }) => {
+            // Relay the signal data back to the caller
+            socket.to(roomId).emit("callAnswered", { signalData, from: socket.id });
+        });
+
+        // Handle ending the call
+        socket.on("endCall", ({ roomId }) => {
+            // Notify all users in the room that the call has ended
+            io.to(roomId).emit("callEnded");
         });
 
         // Handle disconnection
