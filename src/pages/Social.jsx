@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 import Header from "../components/Navbar";
 import Footer from "../components/Footer";
 import NotificationPopup from "../components/ui/Notification";
+import { UserPlusIcon, UserMinusIcon } from "@heroicons/react/24/outline";
 
 const Social = () => {
 
@@ -48,6 +49,7 @@ const Social = () => {
 
   const fetchFriendRequests = async (user) => {
     try {
+      setLoading(true);
       const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-requests?uid=${encodeURIComponent(user.uid)}`, {
         method: "GET",  // This is now a GET request
       });
@@ -90,6 +92,7 @@ const Social = () => {
     }
 
     try {
+      setLoading(true); // Set loading to true while fetching
         // Send the query to the backend
         const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/search?query=${encodeURIComponent(query)}`);
 
@@ -99,8 +102,10 @@ const Social = () => {
 
         const results = await response.json(); // Parse the JSON response
         setSearchResults(results); // Update state with the search results
+        setLoading(false); // Set loading to false when data is fetched
     } catch (error) {
         console.error("Error fetching search results:", error);
+        setLoading(false); // Set loading to false in case of error
     }
   };
 
@@ -200,84 +205,145 @@ const Social = () => {
       case "Friends":
         return (
           <div>
-            <h2 className="text-xl font-semibold mb-3">Your Friends</h2>
-            <ul className="space-y-3">
-              {friends.map((friend) => (
-                <li
-                  key={friend.id}
-                  className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-                >
-                  <span>{friend.displayName}</span>
-                  <button
-                    className="text-gray-500 hover:text-gray-800"
+              <h2 className="text-xl font-semibold mb-3">Your Friends</h2>
+              {loading ? (
+                <div>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <div
+                    key={index}
+                    className="flex items-center px-5 py-3 animate-pulse space-x-3"
+                    >
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <div className="flex flex-col space-y-1 ml-3 w-full">
+                        <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+              friends.map((friend) => (
+                  <div
+                    key={friend.id}
+                    className="flex items-center px-5 py-3 transition-all"
                   >
-                    &#8230;
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+                    {/* Placeholder for the image */}
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                  
+                    {/* Text content */}
+                    <div className="flex flex-col space-y-1 ml-3 w-full">
+                    <div className="relative overflow-hidden whitespace-nowrap text-ellipsis">
+                      <span
+                        className="font-semibold text-gray-800 inline-block w-full"
+                      >
+                      {friend.displayName}
+                      </span>
+                    </div>
+                    </div>
+                  </div>
+                  ))
+                )}
+              </div>
         );
         case "Search":
           return (
-              <div>
-                  <h2 className="text-xl font-semibold mb-3">Search Users</h2>
-                  <input
-                      type="text"
-                      placeholder="Search for users to add"
-                      value={searchQuery}
-                      onChange={handleSearch}
-                      className="w-full p-2 border border-gray-300 rounded-md"
-                  />
-                  {searchResults.length > 0 && (
-                      <ul
-                          className="space-y-3 mt-3 transition-all animate-fade-in"
+            <div>
+              <h2 className="text-xl font-semibold mb-3">Search Users</h2>
+              <input
+                type="text"
+                placeholder="Search for users to add"
+                value={searchQuery}
+                onChange={handleSearch}
+                className="w-full p-2 border border-gray-300 rounded-md"
+              />
+              {loading ? (
+                <ul className="space-y-3 mt-3">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                        <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                      </div>
+                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                searchResults.length > 0 && (
+                  <ul className="space-y-3 mt-3 transition-all animate-fade-in">
+                    {searchResults.map((user) => (
+                      <li
+                        key={user.displayName}
+                        className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
                       >
-                          {searchResults.map((user) => (
-                              <li
-                                  key={user.displayName}
-                                  className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-                              >
-                                  <span>{user.displayName}</span>
-                                  <button
-                                      onClick={() => handleSendRequest(curUser, user)}
-                                      className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
-                                  >
-                                      Send Request
-                                  </button>
-                              </li>
-                          ))}
-                      </ul>
-                  )}
-              </div>
-          );      
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                          <div className="">
+                            <span>{user.displayName}</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleSendRequest(curUser, user)}
+                          className="bg-gray-300 text-black px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
+                        >
+                          <UserPlusIcon className="w-5 h-5 inline-block" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
+          );     
           case "Requests":
             return (
               <div>
                 <h2 className="text-xl font-semibold mb-3">Incoming Friend Requests</h2>
-                {incomingRequests.length > 0 ? (
+                {loading ? (
+                  <ul className="space-y-3 mt-3">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <li
+                        key={index}
+                        className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                          <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                        </div>                     
+                      </li>
+                    ))}
+                  </ul>
+                ) : incomingRequests.length > 0 ? (
                   <ul className="space-y-3">
                     {incomingRequests.map((req) => (
                       <li
                         key={req.id}
                         className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
                       >
-                        {/* Display the sender's displayName */}
-                        <span>{req.sender.displayName}</span>
                         <div className="flex items-center space-x-3">
-
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                          <span>{req.sender.displayName}</span>
+                        </div>
                         
+                        <div className="flex items-center space-x-3">
                           <button
                             onClick={() => handleAcceptRequest(req.id)}
-                            className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                            className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
                           >
-                            Accept
+                            <UserPlusIcon className="w-5 h-5 inline-block" />
                           </button>
                           <button
                             onClick={() => handleRejectRequest(req.id)}
-                            className="bg-gray-500 text-white px-3 py-1 rounded-md hover:bg-gray-600"
+                            className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
                           >
-                            Reject
+                            <UserMinusIcon className="w-5 h-5 inline-block" />
                           </button>
                         </div>
                       </li>
@@ -288,6 +354,7 @@ const Social = () => {
                 )}
               </div>
             );
+
       default:
         return null;
     }
@@ -306,7 +373,7 @@ const Social = () => {
                 key={category}
                 className={`cursor-pointer p-2 rounded-md ${
                   activeTab === category
-                    ? "bg-gray-500 text-white transition-all"
+                    ? "font-bold"
                     : "hover:font-semibold"
                 }`}
                 onClick={() => setActiveTab(category)}
@@ -347,7 +414,7 @@ const Social = () => {
                       key={category}
                       className={`cursor-pointer p-2 rounded-md ${
                         activeTab === category
-                          ? "bg-gray-500 text-white transition-all"
+                          ? "font-bold"
                           : "hover:font-semibold"
                       }`}
                       onClick={() => {
@@ -365,11 +432,9 @@ const Social = () => {
 
         {/* Main Content */}
         <div className="lg:w-3/4 w-full p-6">
-          {loading ? (
-            <p>Loading user data...</p>
-          ) : (
+          { 
             renderContent()
-          )}
+          }
         </div>
       </div>
       {popupMessage && (

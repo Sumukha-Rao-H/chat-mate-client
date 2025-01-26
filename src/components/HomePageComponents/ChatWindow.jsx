@@ -137,7 +137,7 @@ const ChatWindow = ({
           </div>
 
           {/* Chat Footer */}
-          <div className="border-t border-gray-300 p-4 flex gap-4 items-center fixed bottom-0 w-full bg-white md:bottom-16 md:w-3/4">
+          <div className="border-t border-gray-300 p-4 pb-4 flex gap-4 items-center fixed bottom-0 w-full bg-white md:bottom-16 md:w-3/4">
             {/* Attachment Icon */}
             <PaperClipIcon className="h-6 w-6 text-gray-500 cursor-pointer hover:text-gray-700" />
             <input

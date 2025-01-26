@@ -6,6 +6,11 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const Settings = () => {
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const db = getFirestore();
+
   const [activeCategory, setActiveCategory] = useState("Account");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [settings, setSettings] = useState({
@@ -30,9 +35,6 @@ const Settings = () => {
     "https://via.placeholder.com/150" // Placeholder image URL
   );
   const [loading, setLoading] = useState(true); // Loading state for Firestore data
-
-  const auth = getAuth();
-  const db = getFirestore();
 
   // Fetch user data from Firestore when component mounts
   useEffect(() => {
@@ -73,26 +75,16 @@ const Settings = () => {
             <div className="space-y-4">
               <div className='flex space-x-4'>
                 <ProfileImage imageUrl={profileImage} onChangeImage={handleChangeImage} />
-                <label className="block text-lg text-gray-700 font-bold self-center">sumukha riot</label>
+                <label className="block text-lg text-gray-700 font-bold self-center">{user.displayName}</label>
               </div>
               <div>
-                <label className="block text-gray-700">Email</label>
+                <label className="block text-gray-700">Display Name</label>
                 <input
-                  type="email"
-                  placeholder="Enter email"
+                  type="text"
+                  placeholder="Enter new username"
                   className="w-full p-2 border border-gray-300 rounded-md"
                   value={settings.account.email}
                   onChange={(e) => setSettings({ ...settings, account: { ...settings.account, email: e.target.value } })}
-                />
-              </div>
-              <div>
-                <label className="block text-gray-700">Password</label>
-                <input
-                  type="password"
-                  placeholder="Enter new password"
-                  className="w-full p-2 border border-gray-300 rounded-md"
-                  value={settings.account.password}
-                  onChange={(e) => setSettings({ ...settings, account: { ...settings.account, password: e.target.value } })}
                 />
               </div>
             </div>
@@ -160,7 +152,7 @@ const Settings = () => {
                 key={category}
                 className={`cursor-pointer p-2 rounded-md ${
                   activeCategory === category
-                    ? "bg-gray-500 text-white transition-all"
+                    ? "font-bold"
                     : "hover:font-semibold"
                 }`}
                 onClick={() => setActiveCategory(category)}
@@ -224,7 +216,7 @@ const Settings = () => {
           ) : (
             renderSettingsContent()
           )}
-          <button className="mt-6 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
+          <button className="mt-6 bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600">
             Save Changes
           </button>
         </div>
