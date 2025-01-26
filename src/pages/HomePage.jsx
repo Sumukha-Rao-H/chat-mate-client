@@ -2,12 +2,11 @@
     import { getAuth } from "firebase/auth";
     import Header from "../components/Navbar";
     import Footer from "../components/Footer";
-    import socket from "../socket"; // Import the socket instance
+    import chatSocket from "../sockets/chatSocket"; // Import the socket instance
     import Sidebar from "../components/HomePageComponents/Sidebar";
     import ChatWindow from "../components/HomePageComponents/ChatWindow";
     import { encryptMessage, decryptMessage } from "../functions/encryption"
     import { verifyOrGenerateKeysForUser, getPrivateKey } from "../functions/generateKeyPair"
-    import { PhoneIcon, VideoCameraIcon, PaperClipIcon, MicrophoneIcon, SpeakerXMarkIcon, PhoneXMarkIcon } from '@heroicons/react/24/outline';
 
     const Home = () => {
         const auth = getAuth();
@@ -16,7 +15,6 @@
         const [loading, setLoading] = useState(false);
         const [messages, setMessages] = useState([]); // Store chat messages
         const [newMessage, setNewMessage] = useState(""); // Input for new message
-        const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar visibility
         const [hasMore, setHasMore] = useState(true);
         const [page, setPage] = useState(1);
         const chatContainerRef = useRef(null);
@@ -38,7 +36,7 @@
             }
 
             // Listen for incoming messages
-            socket.on("receiveMessage", async (message) => {
+            chatSocket.on("receiveMessage", async (message) => {
                 try {
                     if (message.senderId !== curUser.uid) {
                         // Decrypt the message using the private key
@@ -55,7 +53,7 @@
             });
 
             return () => {
-                socket.off("receiveMessage");
+                chatSocket.off("receiveMessage");
             };
         }, [curUser]);
 
@@ -129,7 +127,7 @@
             setHasMore(true);
 
             // Join a room with the friend
-            socket.emit("joinRoom", {
+            chatSocket.emit("joinRoom", {
                 senderId: curUser.uid,
                 receiverId: friend.uid,
             });
@@ -174,7 +172,7 @@
                 };
         
                 // Emit the message to the backend
-                socket.emit("sendMessage", message);
+                chatSocket.emit("sendMessage", message);
         
                 // Add the original message to the local state for display purposes
                 setMessages((prevMessages) => [
