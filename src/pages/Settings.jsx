@@ -13,12 +13,8 @@ const Settings = () => {
 
   const [activeCategory, setActiveCategory] = useState("Account");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [settings, setSettings] = useState({
-    account: {
-      username: "johndoe123",
-      email: "johndoe@example.com",
-      password: "",
-    },
     notifications: {
       emailNotifications: true,
       smsNotifications: false,
@@ -66,6 +62,10 @@ const Settings = () => {
     setProfileImage(newImageUrl);
   };
 
+  const toggleNotifications = () => {
+    setNotificationsEnabled((prev) => !prev);
+  };
+
   const renderSettingsContent = () => {
     switch (activeCategory) {
       case "Account":
@@ -83,7 +83,6 @@ const Settings = () => {
                   type="text"
                   placeholder="Enter new username"
                   className="w-full p-2 border border-gray-300 rounded-md"
-                  value={settings.account.email}
                   onChange={(e) => setSettings({ ...settings, account: { ...settings.account, email: e.target.value } })}
                 />
               </div>
@@ -92,22 +91,30 @@ const Settings = () => {
         );
       case "Notifications":
         return (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Notification Preferences</h2>
-            <div className="space-y-4">
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" checked={settings.notifications.emailNotifications} />
-                <span>Email Notifications</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" checked={settings.notifications.smsNotifications} />
-                <span>SMS Notifications</span>
-              </label>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" checked={settings.notifications.pushNotifications} />
-                <span>Push Notifications</span>
-              </label>
-            </div>
+          <div className="flex items-center">
+            <span className="mr-3 text-gray-700 font-medium">
+              {notificationsEnabled ? "Notifications On" : "Notifications Off"}
+            </span>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={notificationsEnabled}
+                onChange={toggleNotifications}
+                className="sr-only peer"
+              />
+              <div
+                className="w-11 h-6 bg-gray-200 rounded-full peer
+                          dark:bg-gray-500
+                          peer-checked:bg-black
+                          after:content-['']
+                          after:absolute after:top-[2px] after:left-[2px] 
+                          after:bg-white after:border-gray-300 after:border 
+                          after:rounded-full after:h-5 after:w-5 after:transition-all 
+                          dark:border-gray-600 
+                          peer-checked:after:translate-x-full 
+                          peer-checked:after:border-white"
+              ></div>
+            </label>
           </div>
         );
       case "Privacy":
@@ -116,7 +123,7 @@ const Settings = () => {
             <h2 className="text-xl font-semibold mb-4">Privacy Settings</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700">Profile Visibility</label>
+                <label className="block text-gray-700">Profile Image Visibility</label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-md"
                   value={settings.privacy.profileVisibility}
@@ -127,10 +134,6 @@ const Settings = () => {
                   <option value="Private">Private</option>
                 </select>
               </div>
-              <label className="flex items-center">
-                <input type="checkbox" className="mr-2" checked={settings.privacy.allowSearch} />
-                <span>Allow people to find me in search</span>
-              </label>
             </div>
           </div>
         );
@@ -193,7 +196,7 @@ const Settings = () => {
                     key={category}
                     className={`cursor-pointer p-2 rounded-md ${
                       activeCategory === category
-                      ? "bg-gray-500 text-white transition-all"
+                      ? "font-bold"
                       : "hover:font-semibold"
                     }`}
                     onClick={() => {
