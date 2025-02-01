@@ -1,48 +1,54 @@
 import React, { useState, useEffect, useContext } from "react";
 import { auth } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = React.createContext();
 
 export function useAuth() {
-    return useContext(AuthContext);
+  return useContext(AuthContext);
 }
 
 export function AuthProvider({ children }) {
-    const [currentUser, setCurrentUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
-    const location = useLocation();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                setCurrentUser(user);
-                if (location.pathname === "/login" || location.pathname === "/register") {
-                    navigate("/home", { replace: true }); // Redirect only from login/register
-                }
-            } else {
-                setCurrentUser(null);
-                if (!["/login", "/register"].includes(location.pathname)) {
-                    navigate("/login", { replace: true }); // Redirect to login unless on a public route
-                }
-            }
-            setLoading(false);
-        });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUser(user);
+        // If user is logged in and currently on /login or /register, redirect to home.
+        if (
+          window.location.pathname === "/login" ||
+          window.location.pathname === "/register"
+        ) {
+          navigate("/home", { replace: true });
+        }
+      } else {
+        setCurrentUser(null);
+        if (
+          window.location.pathname !== "/login" &&
+          window.location.pathname !== "/register"
+        ) {
+          navigate("/login", { replace: true });
+        }
+      }
+      setLoading(false);
+    });
 
-        return unsubscribe; // Clean up the listener when the component unmounts
-    }, [navigate, location.pathname]);
+    return unsubscribe;
+  }, [navigate]);
 
-    const value = {
-        currentUser,
-        isLoggedIn: !!currentUser, // Dynamic calculation
-        loading,
-    };
+  const value = {
+    currentUser,
+    isLoggedIn: !!currentUser,
+    loading,
+  };
 
-    return (
-        <AuthContext.Provider value={value}>
-            {!loading && children} {/* Prevent rendering children until loading is complete */}
-        </AuthContext.Provider>
-    );
+  return (
+    <AuthContext.Provider value={value}>
+      {!loading && children}
+    </AuthContext.Provider>
+  );
 }

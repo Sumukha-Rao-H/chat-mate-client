@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate, Link } from 'react-router-dom';
 import { doSignInWithEmailAndPassword, doSignInWithGoogle, doResetPassword } from '../firebase/auth';
 import { useAuth } from '../context/authContext';
+import { useNavigate } from 'react-router-dom';
 import Logo from '../components/ui/Logo';
 
 const Login = () => {
@@ -11,6 +12,16 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [isSigningIn, setIsSigningIn] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+
+    const { currentUser, loading } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // If not loading and a user is logged in, redirect to home
+        if (!loading && currentUser) {
+        navigate("/home", { replace: true });
+        }
+    }, [loading, currentUser, navigate]);
 
     // Function to save user data to the backend
     const saveUserToBackend = async (user) => {
