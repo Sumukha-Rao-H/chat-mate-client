@@ -17,7 +17,7 @@ const NotificationPopup = ({ message, onClose }) => {
 
   return (
     <div
-      className={`fixed bottom-4 right-4 bg-gray-600 text-white shadow-md rounded-md p-4 flex items-center space-x-2 transition-opacity duration-500 ease-out ${
+      className={`fixed bottom-4 right-4 bg-gray-600 text-white shadow-md rounded-md p-4 flex items-center space-x-2 transition-opacity duration-500 ease-out z-50 ${
         !isVisible ? "opacity-0 invisible" : "opacity-100 visible"
       }`}
     >
