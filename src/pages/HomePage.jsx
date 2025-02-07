@@ -19,16 +19,6 @@
         const [page, setPage] = useState(1);
         const chatContainerRef = useRef(null);
         const lastMessageRef = useRef(null);
-        const [isVideoCalling, setIsVideoCalling] = useState(false);
-        const [isAudioCalling, setIsAudioCalling] = useState(false);
-        const [isMuted, setIsMuted] = useState(false);
-        const [isVideoOff, setIsVideoOff] = useState(false);
-
-        const handleMute = () => {
-            setIsMuted((prevState) => !prevState); // Toggle mute state
-        };
-
-        const handleTurnOffVideo = () => setIsVideoOff((prev) => !prev);
 
         useEffect(() => {
             if (curUser) {
@@ -203,21 +193,6 @@
             return <div>Loading...</div>;
         }
 
-        const handleVideoCall = () => {
-            setIsVideoCalling(true);
-            setIsAudioCalling(false); // Ensure only one type of call is active
-        };
-        
-        const handleAudioCall = () => {
-            setIsAudioCalling(true);
-            setIsVideoCalling(false); // Ensure only one type of call is active
-        };
-        
-        const handleEndCall = () => {
-            setIsVideoCalling(false);
-            setIsAudioCalling(false);
-        };
-
         return (
             <>
                 <Header />
@@ -232,14 +207,6 @@
 
                                 <ChatWindow
                                         activeConversation={activeConversation}
-                                        handleAudioCall={handleAudioCall}
-                                        handleVideoCall={handleVideoCall}
-                                        isAudioCalling={isAudioCalling}
-                                        isMuted={isMuted}
-                                        isVideoCalling={isVideoCalling}
-                                        isVideoOff={isVideoOff}
-                                        handleMute={handleMute}
-                                        handleEndCall={handleEndCall}
                                         messages={messages}
                                         curUser={curUser}
                                         handleScroll={handleScroll}
@@ -262,14 +229,6 @@
                                     <>
                                         <ChatWindow
                                             activeConversation={activeConversation}
-                                            handleAudioCall={handleAudioCall}
-                                            handleVideoCall={handleVideoCall}
-                                            isAudioCalling={isAudioCalling}
-                                            isMuted={isMuted}
-                                            isVideoCalling={isVideoCalling}
-                                            isVideoOff={isVideoOff}
-                                            handleMute={handleMute}
-                                            handleEndCall={handleEndCall}
                                             messages={messages}
                                             curUser={curUser}
                                             handleScroll={handleScroll}

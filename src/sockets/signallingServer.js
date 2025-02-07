@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const SIGNALING_URL = `${process.env.REACT_APP_SERVER_URL}/signallingServer`;
+const SIGNALING_URL = `${process.env.REACT_APP_SERVER_URL}/signaling`;
 
 const signallingServer = io(SIGNALING_URL, {
     autoConnect: false, // Prevent auto-connect on import
