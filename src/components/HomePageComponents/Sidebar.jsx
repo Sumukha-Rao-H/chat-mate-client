@@ -46,7 +46,7 @@ const Sidebar = ({ handleSelectConversation }) => {
 
         {/* Sidebar Content (Scrollable) */}
         <div className="flex-grow overflow-y-auto">
-		{loading || friends.length === 0 ? (
+      {loading || !friends?.length ? (
 			<div>
 			{Array.from({ length: 5 }).map((_, index) => (
 				<div
