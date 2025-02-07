@@ -78,7 +78,7 @@ const Sidebar = ({ handleSelectConversation }) => {
                     <span
                       className="font-semibold text-gray-800 inline-block w-full animate-scroll"
                       style={{
-                        animation: friend.displayName.length > 12 ? "scroll-text 8s linear infinite" : "none",
+                        animation: "scroll-text 8s linear infinite",
                       }}
                     >
                       {friend.displayName}
