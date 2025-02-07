@@ -75,14 +75,14 @@ const Sidebar = ({ handleSelectConversation }) => {
                 {/* Text content */}
                 <div className="flex flex-col space-y-1 ml-3 w-full">
                   <div className="relative overflow-hidden whitespace-nowrap text-ellipsis">
-                    <span
-                      className="font-semibold text-gray-800 inline-block w-full animate-scroll"
-                      style={{
-                        animation: "scroll-text 8s linear infinite",
-                      }}
-                    >
-                      {friend.displayName}
-                    </span>
+                  <span
+                    className="font-semibold text-gray-800 inline-block w-full"
+                    title={friend.displayName} // Shows full name on hover
+                  >
+                    {friend.displayName.length > 36
+                      ? friend.displayName.slice(0, 36) + "..."
+                      : friend.displayName}
+                  </span>
                   </div>
                   <div className="text-sm text-gray-500 truncate">
                     {friend.lastMessage || "Start a conversation"}
