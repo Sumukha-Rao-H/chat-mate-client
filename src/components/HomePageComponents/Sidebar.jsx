@@ -79,7 +79,7 @@ const Sidebar = ({ handleSelectConversation }) => {
                     className="font-semibold text-gray-800 inline-block w-full"
                     title={friend.displayName} // Shows full name on hover
                   >
-                    {friend.displayName.length > 36
+                    {(friend.displayName.length || 0) > 36            //length was causing app to crash in production hence the 0
                       ? friend.displayName.slice(0, 36) + "..."
                       : friend.displayName}
                   </span>
