@@ -9,7 +9,7 @@ const Sidebar = ({ handleSelectConversation }) => {
   const user = auth.currentUser;
 
   useEffect(() => {
-    fetchFriends(user);
+    if (user) fetchFriends(user);
   }, [user]);
 
   const fetchFriends = async (userId) => {
@@ -27,7 +27,7 @@ const Sidebar = ({ handleSelectConversation }) => {
       }
 
       const friendsList = await response.json();
-      setFriends(friendsList);
+      setFriends(Array.isArray(friendsList) ? friendsList : []);
       setLoading(false);
     } catch (error) {
       console.error("Error fetching friends:", error);
@@ -100,7 +100,7 @@ const Sidebar = ({ handleSelectConversation }) => {
             <h1 className="text-xl font-bold text-gray-800">Chats</h1>
           </div>
           <div className="flex-grow overflow-y-auto">
-            {loading || friends.length === 0 ? (
+            {loading || !friends || friends.length === 0 ? (
               <div>
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div
