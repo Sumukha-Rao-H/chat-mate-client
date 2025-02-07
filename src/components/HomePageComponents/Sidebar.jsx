@@ -16,7 +16,9 @@ const Sidebar = ({ handleSelectConversation }) => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URL}/api/get-friends?uid=${encodeURIComponent(user.uid)}`,
+        `${
+          process.env.REACT_APP_SERVER_URL
+        }/api/get-friends?uid=${encodeURIComponent(user.uid)}`,
         {
           method: "GET",
         }
@@ -75,14 +77,14 @@ const Sidebar = ({ handleSelectConversation }) => {
                 {/* Text content */}
                 <div className="flex flex-col space-y-1 ml-3 w-full">
                   <div className="relative overflow-hidden whitespace-nowrap text-ellipsis">
-                  <span
-                    className="font-semibold text-gray-800 inline-block w-full"
-                    title={friend.displayName} // Shows full name on hover
-                  >
-                    {(friend.displayName.length || 0) > 36            //length was causing app to crash in production hence the 0
-                      ? friend.displayName.slice(0, 36) + "..."
-                      : friend.displayName}
-                  </span>
+                    <span
+                      className="font-semibold text-gray-800 inline-block w-full"
+                      title={friend.displayName || ""} // Ensure title is never null/undefined
+                    >
+                      {(friend.displayName?.length ?? 0) > 36
+                        ? (friend.displayName || "").slice(0, 36) + "..."         // Fixed null issue
+                        : friend.displayName || ""}
+                    </span>
                   </div>
                   <div className="text-sm text-gray-500 truncate">
                     {friend.lastMessage || "Start a conversation"}
