@@ -108,6 +108,7 @@
             if(activeConversation) {
                 fetchMessages(page);
             }
+            console.log("🔹 Active Conversation updated:", activeConversation);
         }, [activeConversation, page]);
 
         const handleSelectConversation = (friend) => {
@@ -195,7 +196,7 @@
 
         return (
             <>
-                <Header />
+                <Header/>
                 <div className="flex flex-col min-h-screen overflow-hidden bg-gray-50">
                     <div className="flex flex-col pt-12">
                         <div className="flex">

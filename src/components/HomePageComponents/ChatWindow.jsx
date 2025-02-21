@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getAuth } from "firebase/auth";
 import {
   PhoneIcon,
   VideoCameraIcon,
@@ -7,7 +8,8 @@ import {
   PaperClipIcon,
   ArrowLeftIcon,
 } from "@heroicons/react/24/outline";
-import signallingServer from "../../sockets/signallingServer";
+import CallNotification from "./IncomingCall";
+import { useSocket } from "../../context/signallingServerContext";
 
 const ChatWindow = ({
   activeConversation,
@@ -24,55 +26,36 @@ const ChatWindow = ({
 }) => {
   const [isCalling, setIsCalling] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [isVideoCall, setIsVideoCall] = useState(false);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const peerConnection = useRef(null);
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
+  const auth = getAuth();
+  const { signalingSocket } = useSocket();
 
   useEffect(() => {
-    if (!signallingServer) return;
+    if (!signalingSocket) return;
 
-    signallingServer.on("incoming-call", async ({ callerId,isVideoCall, sdp }) => {
-      console.log(`Incoming ${ isVideoCall ? "video" : "audio"} call from: ${callerId}`);
-      if (activeConversation.uid !== callerId) return;
-
-      peerConnection.current = createPeerConnection();
-
-      await peerConnection.current.setRemoteDescription(
-        new RTCSessionDescription(sdp)
-      );
-      const answer = await peerConnection.current.createAnswer();
-      await peerConnection.current.setLocalDescription(answer);
-
-      signallingServer.emit("accept-call", {
-        callerId,
-        recipientId: curUser.uid,
-        sdp: answer,
-      });
-
-      setIsCalling(true);
+    signalingSocket.on("call-accepted", async ({ sdp }) => {
+      if (peerConnection.current) {
+        await peerConnection.current.setRemoteDescription(
+          new RTCSessionDescription(sdp)
+        );
+      }
     });
 
-    signallingServer.on("call-accepted", async ({ sdp }) => {
-      await peerConnection.current.setRemoteDescription(
-        new RTCSessionDescription(sdp)
-      );
-    });
-
-    signallingServer.on("ice-candidate", ({ candidate }) => {
+    signalingSocket.on("ice-candidate", ({ candidate }) => {
       if (peerConnection.current) {
         peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
       }
     });
 
     return () => {
-      signallingServer.off("incoming-call");
-      signallingServer.off("call-accepted");
-      signallingServer.off("ice-candidate");
+      signalingSocket.off("call-accepted");
+      signalingSocket.off("ice-candidate");
     };
-  }, [signallingServer, activeConversation]);
+  }, [signalingSocket]);
 
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
@@ -81,8 +64,8 @@ const ChatWindow = ({
 
     pc.onicecandidate = (event) => {
       if (event.candidate) {
-        signallingServer.emit("ice-candidate", {
-          recipientId: activeConversation.uid,
+        signalingSocket.emit("ice-candidate", {
+          recipientId: activeConversation?.uid,
           candidate: event.candidate,
         });
       }
@@ -98,33 +81,33 @@ const ChatWindow = ({
     return pc;
   };
 
-  const startCall = async (video = false) => {
+  const startCall = async (video = true) => {
+    if (!signalingSocket || !signalingSocket.connected) {
+      console.error("Socket not connected. Cannot start call.");
+      return;
+    }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video,
         audio: true,
       });
       setLocalStream(stream);
-
       if (localVideoRef.current) {
         localVideoRef.current.srcObject = stream;
       }
-
       peerConnection.current = createPeerConnection();
       stream
         .getTracks()
         .forEach((track) => peerConnection.current.addTrack(track, stream));
-
       const offer = await peerConnection.current.createOffer();
       await peerConnection.current.setLocalDescription(offer);
-
-      signallingServer.emit("call-user", {
-        callerId: curUser.uid,
-        recipientId: activeConversation.uid,
+      signalingSocket.emit("call-user", {
+        callerId: auth.currentUser.uid,
+        callerName: auth.currentUser.displayName,
+        recipientId: activeConversation?.uid,
         isVideoCall: video,
         sdp: offer,
       });
-
       setIsCalling(true);
     } catch (error) {
       console.error("Error starting call:", error);
@@ -178,15 +161,13 @@ const ChatWindow = ({
                       : "bg-gray-200 text-gray-700"
                   }`}
                 >
-                  {" "}
-                  <MicrophoneIcon className="w-5 h-5" />{" "}
+                  <MicrophoneIcon className="w-5 h-5" />
                 </button>
                 <button
                   onClick={handleEndCall}
                   className="bg-red-500 text-white p-2 rounded hover:bg-red-600 transition-all flex items-center gap-2"
                 >
-                  {" "}
-                  <PhoneXMarkIcon className="w-5 h-5" />{" "}
+                  <PhoneXMarkIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -242,11 +223,11 @@ const ChatWindow = ({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
               placeholder="Send a message"
-              className="flex-grow border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-800"
+              className="flex-grow border border-gray-300 rounded-lg px-4 py-2"
             />
             <button
               onClick={handleSendMessage}
-              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all"
+              className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
             >
               Send
             </button>
