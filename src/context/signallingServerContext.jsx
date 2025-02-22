@@ -113,7 +113,7 @@ export const SocketProvider = ({ children }) => {
 
   const handleDeclineCall = () => {
     if (incomingCall) {
-      signalingSocket.emit("call-rejected", {
+      signalingSocket.emit("reject-call", {
         callerId: incomingCall.callerId,
         recipientId: user.uid,
       });

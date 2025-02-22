@@ -46,6 +46,13 @@ export const CallProvider = ({ children, externalSetIsCalling }) => {
       }
     });
 
+    signalingSocket.on("call-rejected", () => {
+      console.log("Call was declined");
+      setIsCalling(false); // Hide the FloatingCallWindow
+      setLocalStream(null);
+      setRemoteStream(null);
+    });
+
     signalingSocket.on("ice-candidate", ({ candidate }) => {
       if (peerConnection.current) {
         peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
@@ -54,6 +61,7 @@ export const CallProvider = ({ children, externalSetIsCalling }) => {
 
     return () => {
       signalingSocket.off("call-accepted");
+      signalingSocket.off("call-declined");
       signalingSocket.off("ice-candidate");
     };
   }, [signalingSocket]);
