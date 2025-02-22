@@ -362,7 +362,6 @@ const Social = () => {
 
   return (
     <>
-      <Header />
       <div className="flex h-screen flex-col lg:flex-row pt-12">
         {/* Sidebar for larger screens */}
         <div className="lg:w-1/4 bg-gray-200 p-4 lg:block hidden">
@@ -440,7 +439,6 @@ const Social = () => {
       {popupMessage && (
         <NotificationPopup message={popupMessage} onClose={handleClosePopup} />
       )}
-      <Footer />
     </>
   );
 };

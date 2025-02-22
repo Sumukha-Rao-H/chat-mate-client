@@ -224,7 +224,6 @@ const Settings = () => {
 
   return (
     <>
-      <Header />
       <div className="flex h-screen flex-col lg:flex-row pt-12">
         {/* Sidebar for larger screens */}
         <div className="lg:w-1/4 bg-gray-200 p-4 lg:block hidden">
@@ -302,7 +301,6 @@ const Settings = () => {
       {popupMessage && (
         <NotificationPopup message={popupMessage} onClose={() => setPopupMessage("")} />
       )}
-      <Footer />
     </>
   );
 };
