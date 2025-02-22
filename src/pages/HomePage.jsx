@@ -1,7 +1,5 @@
     import React, { useState, useEffect, useRef } from "react";
     import { getAuth } from "firebase/auth";
-    import Header from "../components/Navbar";
-    import Footer from "../components/Footer";
     import chatSocket from "../sockets/chatSocket"; // Import the socket instance
     import Sidebar from "../components/HomePageComponents/Sidebar";
     import ChatWindow from "../components/HomePageComponents/ChatWindow";

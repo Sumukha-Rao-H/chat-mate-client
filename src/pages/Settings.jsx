@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import Header from "../components/Navbar";
-import Footer from "../components/Footer";
 import NotificationPopup from "../components/ui/Notification";
 import ProfileImage from '../components/ProfileImage';
 import { getAuth } from "firebase/auth";
