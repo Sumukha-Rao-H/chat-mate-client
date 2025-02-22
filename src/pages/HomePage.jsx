@@ -194,11 +194,11 @@
 
         return (
             <>
-                <div className="flex flex-col min-h-screen overflow-hidden bg-gray-50">
-                    <div className="flex flex-col pt-12">
-                        <div className="flex">
+                <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+                    <div className="flex flex-col flex-grow pt-12 ">
+                        <div className="flex flex-grow">
                             {/* Desktop View: Sidebar and Chat Window */}
-                            <div className="hidden md:flex w-full h-screen">
+                            <div className="hidden md:flex w-full">
                                 <Sidebar 
                                     handleSelectConversation={handleSelectConversation}
                                 />

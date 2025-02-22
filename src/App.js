@@ -10,11 +10,9 @@ import Layout from "./Layout";
 import { AuthProvider } from "./context/authContext";
 import { SocketProvider } from "./context/signallingServerContext";
 import { getAuth } from "firebase/auth";
-
-
+import { CallProvider } from "./context/callContext";
 
 function App() {
-
   const auth = getAuth();
   const user = auth.currentUser;
   const location = useLocation();
@@ -35,11 +33,13 @@ function App() {
   return (
     <AuthProvider>
       <SocketProvider user={user}>
-        {noLayoutRoutes.includes(location.pathname) ? (
+        <CallProvider>
+          {noLayoutRoutes.includes(location.pathname) ? (
             <div className="w-full h-screen flex flex-col">{routesElement}</div>
           ) : (
             <Layout>{routesElement}</Layout>
           )}
+        </CallProvider>
       </SocketProvider>
     </AuthProvider>
   );

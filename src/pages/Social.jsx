@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
-import Header from "../components/Navbar";
-import Footer from "../components/Footer";
 import NotificationPopup from "../components/ui/Notification";
 import { UserPlusIcon, UserMinusIcon } from "@heroicons/react/24/outline";
 
@@ -25,7 +23,6 @@ const Social = () => {
       fetchFriends(curUser);
     }
   }, [curUser]);
-
 
   const fetchFriends = async (user) => {
     try {
