@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import signalingSocket from "../sockets/signallingServer";
 import CallNotification from "../components/HomePageComponents/IncomingCall";
+import { updateCallState } from "./callContext";
 
 const SocketContext = createContext();
 
@@ -11,6 +12,7 @@ export const SocketProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [incomingCall, setIncomingCall] = useState(null);
   const [remoteSdp, setRemoteSdp] = useState(null);
+  const [isCalling, setIsCalling] = useState(false);
 
   useEffect(() => {
     const auth = getAuth();
@@ -104,8 +106,8 @@ export const SocketProvider = ({ children }) => {
         recipientId: user.uid,
         sdp: remoteSdp,
       });
-  
       setIncomingCall(null);
+      updateCallState(true);
     }
   };
 
@@ -125,13 +127,14 @@ export const SocketProvider = ({ children }) => {
   
 
   return (
-    <SocketContext.Provider value={{ signalingSocket, user }}>
+
+    <SocketContext.Provider value={{ signalingSocket, user,}}>
       {children}
       {incomingCall && (
         <>
         {console.log("📢 Rendering Call Notification:", incomingCall)}
         <CallNotification
-          callerName={incomingCall.callerName}
+          callerName={incomingCall.callerName} 
           isVideoCall={incomingCall.isVideoCall}
           onAccept={handleAcceptCall}
           onDecline={handleDeclineCall}

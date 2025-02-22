@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { PhoneIcon, VideoCameraIcon } from "@heroicons/react/24/outline";
+import { useCall } from "../../context/callContext";
 
 const CallNotification = ({ callerName, isVideoCall, onAccept, onDecline }) => {
   const [show, setShow] = useState(true);

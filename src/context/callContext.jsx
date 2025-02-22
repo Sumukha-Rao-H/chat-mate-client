@@ -13,15 +13,26 @@ const CallContext = createContext();
 
 export const useCall = () => useContext(CallContext);
 
-export const CallProvider = ({ children }) => {
+const setIsCallingRef = { current: null };
+
+
+export const CallProvider = ({ children, externalSetIsCalling }) => {
   const [isCalling, setIsCalling] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isInCall, setIsInCall] = useState(false);
   const peerConnection = useRef(null);
   const auth = getAuth();
   const { signalingSocket } = useSocket();
+
+  useEffect(() => {
+    setIsCallingRef.current = setIsCalling;
+    return () => {
+      setIsCallingRef.current = null; // Clean up when unmounted
+    };
+  }, []);
 
   useEffect(() => {
     if (!signalingSocket) return;
@@ -31,6 +42,7 @@ export const CallProvider = ({ children }) => {
         await peerConnection.current.setRemoteDescription(
           new RTCSessionDescription(sdp)
         );
+        setIsInCall(true);
       }
     });
 
@@ -103,6 +115,8 @@ export const CallProvider = ({ children }) => {
   const handleEndCall = () => {
     peerConnection.current?.close();
     setIsCalling(false);
+    if (externalSetIsCalling) externalSetIsCalling(false);
+    setIsInCall(false);
     setLocalStream(null);
     setRemoteStream(null);
   };
@@ -111,6 +125,7 @@ export const CallProvider = ({ children }) => {
     <CallContext.Provider
       value={{
         isCalling,
+        setIsCalling,
         isMuted,
         localStream,
         remoteStream,
@@ -125,4 +140,11 @@ export const CallProvider = ({ children }) => {
       {isCalling && <FloatingCallWindow/>}
     </CallContext.Provider>
   );
+};
+
+
+export const updateCallState = (value) => {
+  if (setIsCallingRef.current) {
+    setIsCallingRef.current(value);
+  }
 };
