@@ -4,7 +4,6 @@ import NotificationPopup from "../components/ui/Notification";
 import { UserPlusIcon, UserMinusIcon } from "@heroicons/react/24/outline";
 
 const Social = () => {
-
   const auth = getAuth();
   const curUser = auth.currentUser;
   const [activeTab, setActiveTab] = useState("Friends");
@@ -15,7 +14,7 @@ const Social = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [incomingRequests, setIncomingRequests] = useState([]);
-  const [popupMessage, setPopupMessage] = useState('');
+  const [popupMessage, setPopupMessage] = useState("");
 
   useEffect(() => {
     if (curUser) {
@@ -27,9 +26,14 @@ const Social = () => {
   const fetchFriends = async (user) => {
     try {
       setLoading(true); // Set loading to true while fetching
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-friends?uid=${encodeURIComponent(user.uid)}`, {
-        method: "GET",
-      });
+      const response = await fetch(
+        `${
+          process.env.REACT_APP_SERVER_URL
+        }/api/get-friends?uid=${encodeURIComponent(user.uid)}`,
+        {
+          method: "GET",
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch friends list");
@@ -47,23 +51,27 @@ const Social = () => {
   const fetchFriendRequests = async (user) => {
     try {
       setLoading(true);
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/get-requests?uid=${encodeURIComponent(user.uid)}`, {
-        method: "GET",  // This is now a GET request
-      });
-  
+      const response = await fetch(
+        `${
+          process.env.REACT_APP_SERVER_URL
+        }/api/get-requests?uid=${encodeURIComponent(user.uid)}`,
+        {
+          method: "GET", // This is now a GET request
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to fetch friend requests");
       }
-  
+
       const requests = await response.json();
-      setIncomingRequests(requests);  // Update state with the fetched requests
-      setLoading(false);  // Set loading to false when the data is fetched
+      setIncomingRequests(requests); // Update state with the fetched requests
+      setLoading(false); // Set loading to false when the data is fetched
     } catch (error) {
       console.error("Error fetching friend requests:", error);
-      setLoading(false);  // Set loading to false in case of error
+      setLoading(false); // Set loading to false in case of error
     }
   };
-  
 
   const handleSearch = (e) => {
     const query = e.target.value;
@@ -71,55 +79,59 @@ const Social = () => {
 
     // Clear any existing timeout
     if (debounceTimeout) {
-        clearTimeout(debounceTimeout);
+      clearTimeout(debounceTimeout);
     }
 
     const newTimeout = setTimeout(() => {
-        performSearch(query); // Call the search function with the query
+      performSearch(query); // Call the search function with the query
     }, 400); // Adjust the debounce delay as needed
 
     setDebounceTimeout(newTimeout);
   };
 
-
   const performSearch = async (query) => {
     if (!query.trim()) {
-        setSearchResults([]); // Clear results if query is empty
-        return;
+      setSearchResults([]); // Clear results if query is empty
+      return;
     }
 
     try {
       setLoading(true); // Set loading to true while fetching
-        // Send the query to the backend
-        const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/user/search?query=${encodeURIComponent(query)}`);
+      // Send the query to the backend
+      const response = await fetch(
+        `${
+          process.env.REACT_APP_SERVER_URL
+        }/api/user/search?query=${encodeURIComponent(query)}`
+      );
 
-        if (!response.ok) {
-            throw new Error("Failed to fetch search results");
-        }
+      if (!response.ok) {
+        throw new Error("Failed to fetch search results");
+      }
 
-        const results = await response.json(); // Parse the JSON response
-        setSearchResults(results); // Update state with the search results
-        setLoading(false); // Set loading to false when data is fetched
+      const results = await response.json(); // Parse the JSON response
+      setSearchResults(results); // Update state with the search results
+      setLoading(false); // Set loading to false when data is fetched
     } catch (error) {
-        console.error("Error fetching search results:", error);
-        setLoading(false); // Set loading to false in case of error
+      console.error("Error fetching search results:", error);
+      setLoading(false); // Set loading to false in case of error
     }
   };
 
-
-
   const handleSendRequest = async (sender, receiver) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/friend-request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ 
-          senderUid: sender.uid,
-          receiverUid: receiver.uid
-        }), 
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/friend-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            senderUid: sender.uid,
+            receiverUid: receiver.uid,
+          }),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to send friend request");
@@ -136,21 +148,24 @@ const Social = () => {
 
   const handleAcceptRequest = async (requestId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/accept-friend-request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ requestId }),
-      });
-  
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/accept-friend-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ requestId }),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to accept friend request");
       }
-  
+
       const result = await response.json();
       console.log(result.message);
-  
+
       // Update the state to remove the accepted request
       setIncomingRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
@@ -165,21 +180,24 @@ const Social = () => {
   };
   const handleRejectRequest = async (requestId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/reject-friend-request`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ requestId }),
-      });
-  
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/reject-friend-request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ requestId }),
+        }
+      );
+
       if (!response.ok) {
         throw new Error("Failed to reject friend request");
       }
-  
+
       const result = await response.json();
       console.log(result.message);
-  
+
       // Update the state to remove the rejected request
       setIncomingRequests((prevRequests) =>
         prevRequests.filter((req) => req.id !== requestId)
@@ -202,155 +220,166 @@ const Social = () => {
       case "Friends":
         return (
           <div>
-              <h2 className="text-xl font-semibold mb-3">Your Friends</h2>
-              {loading ? (
-                <div>
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <div
+            <h2 className="text-xl font-semibold mb-3">Your Friends</h2>
+            {loading ? (
+              <div>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <div
                     key={index}
                     className="flex items-center px-5 py-3 animate-pulse space-x-3"
-                    >
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                      <div className="flex flex-col space-y-1 ml-3 w-full">
-                        <div className="w-24 h-4 bg-gray-300 rounded"></div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-              friends.map((friend) => (
-                  <div
-                    key={friend.id}
-                    className="flex items-center px-5 py-3 transition-all"
                   >
-                    {/* Placeholder for the image */}
                     <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                  
-                    {/* Text content */}
                     <div className="flex flex-col space-y-1 ml-3 w-full">
-                    <div className="relative overflow-hidden whitespace-nowrap text-ellipsis">
-                      <span
-                        className="font-semibold text-gray-800 inline-block w-full"
-                      >
-                      {friend.displayName}
-                      </span>
-                    </div>
+                      <div className="w-24 h-4 bg-gray-300 rounded"></div>
                     </div>
                   </div>
-                  ))
-                )}
+                ))}
               </div>
+            ) : (
+              friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  className="flex items-center px-5 py-3 transition-all"
+                >
+                  {/* Placeholder for the image */}
+                  <img
+                    src={friend.photoUrl}
+                    alt="Friend"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
+
+                  {/* Text content */}
+                  <div className="flex flex-col space-y-1 ml-3 w-full">
+                    <div className="relative overflow-hidden whitespace-nowrap text-ellipsis">
+                      <span className="font-semibold text-gray-800 inline-block w-full">
+                        {friend.displayName}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         );
-        case "Search":
-          return (
-            <div>
-              <h2 className="text-xl font-semibold mb-3">Search Users</h2>
-              <input
-                type="text"
-                placeholder="Search for users to add"
-                value={searchQuery}
-                onChange={handleSearch}
-                className="w-full p-2 border border-gray-300 rounded-md"
-              />
-              {loading ? (
-                <ul className="space-y-3 mt-3">
-                  {Array.from({ length: 5 }).map((_, index) => (
+      case "Search":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-3">Search Users</h2>
+            <input
+              type="text"
+              placeholder="Search for users to add"
+              value={searchQuery}
+              onChange={handleSearch}
+              className="w-full p-2 border border-gray-300 rounded-md"
+            />
+            {loading ? (
+              <ul className="space-y-3 mt-3">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              searchResults.length > 0 && (
+                <ul className="space-y-3 mt-3 transition-all animate-fade-in">
+                  {searchResults.map((user) => (
                     <li
-                      key={index}
-                      className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                      key={user.displayName}
+                      className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                        <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                        <img
+                          src={user.photoUrl}
+                          alt="Friend"
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="">
+                          <span>{user.displayName}</span>
+                        </div>
                       </div>
-                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-
+                      <button
+                        onClick={() => handleSendRequest(curUser, user)}
+                        className="bg-gray-300 text-black px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
+                      >
+                        <UserPlusIcon className="w-5 h-5 inline-block" />
+                      </button>
                     </li>
                   ))}
                 </ul>
-              ) : (
-                searchResults.length > 0 && (
-                  <ul className="space-y-3 mt-3 transition-all animate-fade-in">
-                    {searchResults.map((user) => (
-                      <li
-                        key={user.displayName}
-                        className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+              )
+            )}
+          </div>
+        );
+      case "Requests":
+        return (
+          <div>
+            <h2 className="text-xl font-semibold mb-3">
+              Incoming Friend Requests
+            </h2>
+            {loading ? (
+              <ul className="space-y-3 mt-3">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <div className="w-24 h-4 bg-gray-300 rounded"></div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : incomingRequests.length > 0 ? (
+              <ul className="space-y-3">
+                {incomingRequests.map((req) => (
+                  <li
+                    key={req.id}
+                    className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <img
+                        src={req.photoUrl}
+                        alt="Friend"
+                        className="w-10 h-10 rounded-full object-cover"
+                      />
+                      <span>{req.sender.displayName}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => handleAcceptRequest(req.id)}
+                        className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                          <div className="">
-                            <span>{user.displayName}</span>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => handleSendRequest(curUser, user)}
-                          className="bg-gray-300 text-black px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
-                        >
-                          <UserPlusIcon className="w-5 h-5 inline-block" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
-          );     
-          case "Requests":
-            return (
-              <div>
-                <h2 className="text-xl font-semibold mb-3">Incoming Friend Requests</h2>
-                {loading ? (
-                  <ul className="space-y-3 mt-3">
-                    {Array.from({ length: 5 }).map((_, index) => (
-                      <li
-                        key={index}
-                        className="flex items-center justify-between w-full bg-gray-100 p-3 rounded-lg animate-pulse"
+                        <UserPlusIcon className="w-5 h-5 inline-block" />
+                      </button>
+                      <button
+                        onClick={() => handleRejectRequest(req.id)}
+                        className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
                       >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                          <div className="w-24 h-4 bg-gray-300 rounded"></div>
-                        </div>
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-                          <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
-                        </div>                     
-                      </li>
-                    ))}
-                  </ul>
-                ) : incomingRequests.length > 0 ? (
-                  <ul className="space-y-3">
-                    {incomingRequests.map((req) => (
-                      <li
-                        key={req.id}
-                        className="flex items-center justify-between bg-gray-100 p-3 rounded-lg"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
-                          <span>{req.sender.displayName}</span>
-                        </div>
-                        
-                        <div className="flex items-center space-x-3">
-                          <button
-                            onClick={() => handleAcceptRequest(req.id)}
-                            className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
-                          >
-                            <UserPlusIcon className="w-5 h-5 inline-block" />
-                          </button>
-                          <button
-                            onClick={() => handleRejectRequest(req.id)}
-                            className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
-                          >
-                            <UserMinusIcon className="w-5 h-5 inline-block" />
-                          </button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p>No incoming friend requests</p>
-                )}
-              </div>
-            );
+                        <UserMinusIcon className="w-5 h-5 inline-block" />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No incoming friend requests</p>
+            )}
+          </div>
+        );
 
       default:
         return null;
@@ -368,9 +397,7 @@ const Social = () => {
               <li
                 key={category}
                 className={`cursor-pointer p-2 rounded-md ${
-                  activeTab === category
-                    ? "font-bold"
-                    : "hover:font-semibold"
+                  activeTab === category ? "font-bold" : "hover:font-semibold"
                 }`}
                 onClick={() => setActiveTab(category)}
               >
@@ -403,35 +430,31 @@ const Social = () => {
           </button>
 
           {isSidebarOpen && (
-            <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4">
-                {["Friends", "Search", "Requests"].map((category) => (
-                  <ul className="list-none p-0 m-0">
-                    <li
-                      key={category}
-                      className={`cursor-pointer p-2 rounded-md ${
-                        activeTab === category
-                          ? "font-bold"
-                          : "hover:font-semibold"
-                      }`}
-                      onClick={() => {
-                        setIsSidebarOpen(false); // Close menu after selection
-                        setActiveTab(category);
-                      }}
-                    >
-                      {category}
-                    </li>
-                  </ul>
+            <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4 z-50">
+              {["Friends", "Search", "Requests"].map((category) => (
+                <ul className="list-none p-0 m-0">
+                  <li
+                    key={category}
+                    className={`cursor-pointer p-2 rounded-md ${
+                      activeTab === category
+                        ? "font-bold"
+                        : "hover:font-semibold"
+                    }`}
+                    onClick={() => {
+                      setIsSidebarOpen(false); // Close menu after selection
+                      setActiveTab(category);
+                    }}
+                  >
+                    {category}
+                  </li>
+                </ul>
               ))}
             </div>
           )}
         </div>
 
         {/* Main Content */}
-        <div className="lg:w-3/4 w-full p-6">
-          { 
-            renderContent()
-          }
-        </div>
+        <div className="lg:w-3/4 w-full p-6">{renderContent()}</div>
       </div>
       {popupMessage && (
         <NotificationPopup message={popupMessage} onClose={handleClosePopup} />

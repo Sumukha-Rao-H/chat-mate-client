@@ -10,7 +10,7 @@ const Sidebar = ({ handleSelectConversation }) => {
 
   useEffect(() => {
     fetchFriends(user);
-  }, [user]);
+  }, [user]); 
 
   const fetchFriends = async (userId) => {
     try {
@@ -71,7 +71,11 @@ const Sidebar = ({ handleSelectConversation }) => {
                 onClick={() => handleSelectConversation(friend)}
               >
                 {/* Placeholder for the image */}
-                <div className="w-10 h-10 bg-gray-300 rounded-full flex-shrink-0"></div>
+                <img
+                  src={friend.photoUrl}
+                  alt="Friend"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
 
                 {/* Text content */}
                 <div className="flex flex-col space-y-1 ml-3 w-full">
@@ -124,7 +128,11 @@ const Sidebar = ({ handleSelectConversation }) => {
                   className="flex items-center px-5 py-3 hover:bg-gray-300 cursor-pointer transition-all"
                   onClick={() => handleSelectConversation(friend)}
                 >
-                  <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                  <img
+                    src={friend.photoUrl}
+                    alt="Friend"
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
                   <div>
                     <div className=" px-3 font-semibold text-gray-800">
                       {friend.displayName}

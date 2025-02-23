@@ -91,8 +91,8 @@
         };
 
         const scrollToBottom = () => {
-            if (chatContainerRef.current) {
-                chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+            if (chatContainerRef.current && lastMessageRef.current) {
+                lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
             }
         };
         
