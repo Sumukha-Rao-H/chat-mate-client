@@ -1,12 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useCall } from "../context/callContext";
-import { 
-  PhoneXMarkIcon, 
-  ArrowsPointingInIcon, 
-  ArrowsPointingOutIcon, 
-  ArrowsRightLeftIcon 
-} from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, PhoneXMarkIcon, MicrophoneIcon, VideoCameraIcon, VideoCameraSlashIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, SlashIcon } from "@heroicons/react/24/outline";
 
 const positions = ["bottom-right", "bottom-left", "top-right", "top-left"];
 
@@ -16,6 +11,10 @@ const FloatingCallWindow = () => {
   const remoteVideoRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [position, setPosition] = useState("bottom-right");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const isVideoCall = true;
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -61,6 +60,8 @@ const FloatingCallWindow = () => {
       }}
       transition={{ type: "spring", stiffness: 150, damping: 20 }}
       className="fixed bg-gray-900 text-white rounded-lg shadow-lg flex flex-col overflow-hidden"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Header */}
       <div className="w-full bg-gray-800 p-2 rounded-t-lg flex justify-between items-center">
@@ -75,9 +76,6 @@ const FloatingCallWindow = () => {
           >
             {isFullScreen ? <ArrowsPointingInIcon className="h-4 w-4" /> : <ArrowsPointingOutIcon className="h-4 w-4" />}
           </button>
-          <button onClick={handleEndCall} className="text-red-500 hover:text-red-700">
-            <PhoneXMarkIcon className="h-4 w-4" />
-          </button>
         </div>
       </div>
 
@@ -90,6 +88,20 @@ const FloatingCallWindow = () => {
           muted
           className="absolute bottom-2 right-2 w-20 h-20 border-2 border-white rounded-md shadow-md"
         />
+      </div>
+      <div className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3 transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}>
+        <button onClick={() => setIsMuted(!isMuted)} className="relative text-white hover:text-gray-300 w-6 h-6">
+          <MicrophoneIcon className={`h-6 w-6 ${isMuted ? "text-red-500" : "text-white"}`} />
+          {isMuted && <SlashIcon className="absolute top-0 left-0 h-6 w-6 size-10 rotate-[120deg] scale-125 text-red-500" />}
+        </button>
+        {isVideoCall && (
+          <button onClick={() => setIsVideoOn(!isVideoOn)} className="text-white hover:text-gray-300">
+            {isVideoOn ? <VideoCameraIcon className="h-6 w-6" /> : <VideoCameraSlashIcon className="h-6 w-6 text-red-500" />}
+          </button>
+        )}
+        <button onClick={handleEndCall} className="text-red-500 hover:text-red-700">
+          <PhoneXMarkIcon className="h-6 w-6" />
+        </button>
       </div>
     </motion.div>
   );
