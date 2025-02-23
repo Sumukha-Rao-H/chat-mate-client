@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import NotificationPopup from "../components/ui/Notification";
-import ProfileImage from '../components/ProfileImage';
+import ProfileImage from "../components/ProfileImage";
 import { getAuth } from "firebase/auth";
 
 const Settings = () => {
@@ -29,7 +29,9 @@ const Settings = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        `${process.env.REACT_APP_SERVER_URL}/api/get-settings?uid=${encodeURIComponent(uid)}`
+        `${
+          process.env.REACT_APP_SERVER_URL
+        }/api/get-settings?uid=${encodeURIComponent(uid)}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch settings");
@@ -39,7 +41,8 @@ const Settings = () => {
       setSettings({
         account: {
           displayName: data.displayName || "",
-          profileImageUrl: data.profileImageUrl || "../../public/uploads/default-user.png",
+          profileImageUrl:
+            data.profileImageUrl || "../../public/uploads/default-user.png",
         },
         notifications: {
           notificationsEnabled: data.notificationsEnabled,
@@ -66,13 +69,16 @@ const Settings = () => {
         profileVisibility: settings.privacy.profileVisibility,
       };
 
-      const response = await fetch(`${process.env.REACT_APP_SERVER_URL}/api/update-settings`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
+      const response = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/update-settings`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to update settings");
@@ -106,9 +112,9 @@ const Settings = () => {
 
   // Handlers for account updates
   const handleChangeImage = (newUrl) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      account: { ...prev.account, profileImageUrl: newUrl }
+      account: { ...prev.account, profileImageUrl: newUrl },
     }));
     setPopupMessage({
       title: "Success!",
@@ -118,26 +124,28 @@ const Settings = () => {
 
   const handleDisplayNameChange = (e) => {
     const value = e.target.value;
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      account: { ...prev.account, displayName: value }
+      account: { ...prev.account, displayName: value },
     }));
   };
 
   // Toggle notifications on/off
   const toggleNotifications = () => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      notifications: { notificationsEnabled: !prev.notifications.notificationsEnabled }
+      notifications: {
+        notificationsEnabled: !prev.notifications.notificationsEnabled,
+      },
     }));
   };
 
   // Handle privacy dropdown change
   const handlePrivacyChange = (e) => {
     const value = e.target.value;
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
-      privacy: { ...prev.privacy, profileVisibility: value }
+      privacy: { ...prev.privacy, profileVisibility: value },
     }));
   };
 
@@ -150,7 +158,10 @@ const Settings = () => {
             <h2 className="text-xl font-semibold mb-4">Account Settings</h2>
             <div className="space-y-4">
               <div className="flex space-x-4">
-                <ProfileImage imageUrl={settings.account.profileImageUrl} onChangeImage={handleChangeImage} />
+                <ProfileImage
+                  imageUrl={settings.account.profileImageUrl}
+                  onChangeImage={handleChangeImage}
+                />
                 <label className="block text-lg text-gray-700 font-bold self-center">
                   {curUser.displayName}
                 </label>
@@ -172,7 +183,9 @@ const Settings = () => {
         return (
           <div className="flex items-center">
             <span className="mr-3 text-gray-700 font-medium">
-              {settings.notifications.notificationsEnabled ? "Notifications On" : "Notifications Off"}
+              {settings.notifications.notificationsEnabled
+                ? "Notifications On"
+                : "Notifications Off"}
             </span>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -190,7 +203,7 @@ const Settings = () => {
                   after:rounded-full after:h-5 after:w-5 after:transition-all 
                   dark:border-gray-600 
                   peer-checked:after:translate-x-full 
-                  peer-checked:after:border-white"
+                  peer-checked:after:border-white z-10"
               ></div>
             </label>
           </div>
@@ -201,7 +214,9 @@ const Settings = () => {
             <h2 className="text-xl font-semibold mb-4">Privacy Settings</h2>
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-700">Profile Image Visibility</label>
+                <label className="block text-gray-700">
+                  Profile Image Visibility
+                </label>
                 <select
                   className="w-full p-2 border border-gray-300 rounded-md"
                   value={settings.privacy.profileVisibility}
@@ -231,7 +246,9 @@ const Settings = () => {
               <li
                 key={category}
                 className={`cursor-pointer p-2 rounded-md ${
-                  activeCategory === category ? "font-bold" : "hover:font-semibold"
+                  activeCategory === category
+                    ? "font-bold"
+                    : "hover:font-semibold"
                 }`}
                 onClick={() => setActiveCategory(category)}
               >
@@ -254,17 +271,24 @@ const Settings = () => {
               viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
             </svg>
           </button>
 
           {mobileMenuOpen && (
-            <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4">
+            <div className="absolute top-12 left-0 w-full bg-gray-200 shadow-lg flex flex-col space-y-2 p-4 z-50">
               {["Account", "Notifications", "Privacy"].map((category) => (
                 <ul key={category} className="list-none p-0 m-0">
                   <li
                     className={`cursor-pointer p-2 rounded-md ${
-                      activeCategory === category ? "bg-gray-500 text-white transition-all" : "hover:font-semibold"
+                      activeCategory === category
+                        ? "font-bold"
+                        : "hover:font-semibold"
                     }`}
                     onClick={() => {
                       setMobileMenuOpen(false);
@@ -297,7 +321,10 @@ const Settings = () => {
         </div>
       </div>
       {popupMessage && (
-        <NotificationPopup message={popupMessage} onClose={() => setPopupMessage("")} />
+        <NotificationPopup
+          message={popupMessage}
+          onClose={() => setPopupMessage("")}
+        />
       )}
     </>
   );
