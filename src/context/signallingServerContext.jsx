@@ -132,7 +132,6 @@ export const SocketProvider = ({ children }) => {
       {children}
       {incomingCall && (
         <>
-        {console.log("📢 Rendering Call Notification:", incomingCall)}
         <CallNotification
           callerName={incomingCall.callerName} 
           isVideoCall={incomingCall.isVideoCall}

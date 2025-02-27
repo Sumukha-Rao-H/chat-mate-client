@@ -33,7 +33,7 @@ function App() {
   return (
     <AuthProvider>
       <SocketProvider user={user}>
-        <CallProvider>
+        <CallProvider user={user}>
           {noLayoutRoutes.includes(location.pathname) ? (
             <div className="w-full h-screen flex flex-col">{routesElement}</div>
           ) : (

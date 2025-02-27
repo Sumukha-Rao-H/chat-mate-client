@@ -5,7 +5,7 @@ import React, {
   useState,
   useEffect,
 } from "react";
-import { getAuth } from "firebase/auth";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useSocket } from "./signallingServerContext";
 import FloatingCallWindow from "../components/FloatingCallWindow";
 
@@ -26,6 +26,19 @@ export const CallProvider = ({ children, externalSetIsCalling }) => {
   const peerConnection = useRef(null);
   const auth = getAuth();
   const { signalingSocket } = useSocket();
+
+  useEffect(() => {
+    const auth = getAuth();
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        console.log('User logged out, ending call...');
+        setIsCalling(false); // End call when user logs out
+      }
+    });
+  
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     setIsCallingRef.current = setIsCalling;
@@ -121,9 +134,19 @@ export const CallProvider = ({ children, externalSetIsCalling }) => {
   };
 
   const handleEndCall = () => {
-    peerConnection.current?.close();
+    if (peerConnection.current) {
+      peerConnection.current.close();
+      peerConnection.current = null;
+    }
+  
+    if (signalingSocket && auth.currentUser) {
+      signalingSocket.emit("end-call", {
+        callerId: auth.currentUser.uid,
+        recipientId: remoteStream ? remoteStream.uid : null, // Ensure recipientId is available
+      });
+    }
+  
     setIsCalling(false);
-    if (externalSetIsCalling) externalSetIsCalling(false);
     setIsInCall(false);
     setLocalStream(null);
     setRemoteStream(null);
