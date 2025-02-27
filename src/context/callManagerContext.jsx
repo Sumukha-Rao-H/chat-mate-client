@@ -21,6 +21,7 @@ export const CallManagerProvider = ({ children }) => {
   const peerConnection = useRef(null);
   const auth = getAuth();
 
+  //register user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -44,6 +45,7 @@ export const CallManagerProvider = ({ children }) => {
     };
   }, []);
 
+  //reciever side
   useEffect(() => {
     const handleIncomingCall = ({ callerId, isVideoCall, sdp }) => {
       console.log("Incoming call from:", callerId);
@@ -81,6 +83,7 @@ export const CallManagerProvider = ({ children }) => {
     };
   }, []);
 
+  //caller side
   const createPeerConnection = () => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
