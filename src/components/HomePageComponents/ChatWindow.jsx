@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { useCall } from "../../context/callContext";
+import { useCallManager } from "../../context/callManagerContext";
 import {
   PhoneIcon,
   VideoCameraIcon,
@@ -28,7 +28,7 @@ const ChatWindow = ({
     remoteVideoRef,
     startCall,
     handleEndCall,
-  } = useCall();
+  } = useCallManager();
 
   const lastMessageRef = useRef(null)
   

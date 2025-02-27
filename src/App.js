@@ -8,9 +8,8 @@ import Social from "./pages/Social";
 import Settings from "./pages/Settings";
 import Layout from "./Layout";
 import { AuthProvider } from "./context/authContext";
-import { SocketProvider } from "./context/signallingServerContext";
 import { getAuth } from "firebase/auth";
-import { CallProvider } from "./context/callContext";
+import { CallManagerProvider } from "./context/callManagerContext";
 
 function App() {
   const auth = getAuth();
@@ -32,15 +31,13 @@ function App() {
 
   return (
     <AuthProvider>
-      <SocketProvider user={user}>
-        <CallProvider user={user}>
+        <CallManagerProvider user={user}>
           {noLayoutRoutes.includes(location.pathname) ? (
             <div className="w-full h-screen flex flex-col">{routesElement}</div>
           ) : (
             <Layout>{routesElement}</Layout>
           )}
-        </CallProvider>
-      </SocketProvider>
+        </CallManagerProvider>
     </AuthProvider>
   );
 }

@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useCall } from "../context/callContext";
+import { useCallManager } from "../context/callManagerContext";
 import { ArrowsRightLeftIcon, PhoneXMarkIcon, MicrophoneIcon, VideoCameraIcon, VideoCameraSlashIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, SlashIcon } from "@heroicons/react/24/outline";
 
 const positions = ["bottom-right", "bottom-left", "top-right", "top-left"];
 
 const FloatingCallWindow = () => {
-  const { isCalling, isMinimized, localStream, remoteStream, handleEndCall } = useCall();
+  const { isCalling, isMinimized, localStream, remoteStream, handleEndCall } = useCallManager();
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
