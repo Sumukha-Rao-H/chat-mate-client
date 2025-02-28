@@ -3,9 +3,9 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import signalingSocket from "../sockets/signallingServer";
 import FloatingCallWindow from "../components/FloatingCallWindow";
 import CallNotification from "../components/HomePageComponents/IncomingCall";
+import Peer from "simple-peer";
 
 const CallManagerContext = createContext();
-
 export const useCallManager = () => useContext(CallManagerContext);
 
 export const CallManagerProvider = ({ children }) => {
@@ -14,178 +14,177 @@ export const CallManagerProvider = ({ children }) => {
   const [isMuted, setIsMuted] = useState(false);
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
-  const [isMinimized, setIsMinimized] = useState(false);
-  const [isInCall, setIsInCall] = useState(false);
   const [incomingCall, setIncomingCall] = useState(null);
-  const [remoteSdp, setRemoteSdp] = useState(null);
-  const peerConnection = useRef(null);
+  const [currentRecipient, setCurrentRecipient] = useState(null);
+  const peerRef = useRef(null);
   const auth = getAuth();
 
-  //register user
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
-        if (!signalingSocket.connected) {
-          signalingSocket.connect();
-        }
-        signalingSocket.on("connect", () => {
-          console.log("Socket reconnected, re-registering user...");
-          signalingSocket.emit("register-user", { uid: user.uid });
-        });
+        if (!signalingSocket.connected) signalingSocket.connect();
         signalingSocket.emit("register-user", { uid: user.uid });
       } else {
         setUser(null);
       }
     });
-
     return () => {
       unsubscribe();
       signalingSocket.disconnect();
     };
   }, []);
 
-  //reciever side
   useEffect(() => {
-    const handleIncomingCall = ({ callerId, isVideoCall, sdp }) => {
-      console.log("Incoming call from:", callerId);
-      setIncomingCall({ callerId, isVideoCall });
-      setRemoteSdp(sdp);
-    };
-
-    const handleCallAccepted = ({ recipientId, sdp }) => {
-      console.log("Call accepted by:", recipientId);
-      setRemoteSdp(sdp);
-    };
-
-    const handleCallRejected = ({ recipientId }) => {
-      console.log("Call rejected by:", recipientId);
-      setIncomingCall(null);
-    };
-
-    const handleIceCandidate = ({ candidate }) => {
-      console.log("Received ICE Candidate:", candidate);
-      if (peerConnection.current) {
-        peerConnection.current.addIceCandidate(new RTCIceCandidate(candidate));
+    signalingSocket.on("incoming-call", ({ callerId, isVideoCall, signal }) => {
+      console.log("Received incoming call:", { callerId, isVideoCall, signal });
+      if (!signal) {
+        console.error("Error: Received undefined signal from caller");
+        return;
       }
-    };
+      setIncomingCall({ callerId, isVideoCall, signal });
+    });
 
-    signalingSocket.on("incoming-call", handleIncomingCall);
-    signalingSocket.on("call-accepted", handleCallAccepted);
-    signalingSocket.on("call-rejected", handleCallRejected);
-    signalingSocket.on("ice-candidate", handleIceCandidate);
+    signalingSocket.on("call-accepted", ({ recipientId, signal }) => {
+      console.log("Call accepted, connecting peer with signal:", signal);
+      if (!peerRef.current) {
+        console.error("Error: Peer instance not initialized before signaling");
+        return;
+      }
+      peerRef.current.signal(signal);
+      setCurrentRecipient(recipientId);
+    });
+
+    signalingSocket.on("call-rejected", () => {
+      console.log("Call rejected by recipient");
+      setIsCalling(false);
+      setLocalStream(null);
+      setIncomingCall(null);
+    });
+
+    signalingSocket.on("call-ended", () => {
+      console.log("Call ended by other party");
+      setIsCalling(false);
+      setLocalStream(null);
+      setRemoteStream(null);
+      setCurrentRecipient(null);
+    });
 
     return () => {
-      signalingSocket.off("incoming-call", handleIncomingCall);
-      signalingSocket.off("call-accepted", handleCallAccepted);
-      signalingSocket.off("call-rejected", handleCallRejected);
-      signalingSocket.off("ice-candidate", handleIceCandidate);
+      signalingSocket.off("incoming-call");
+      signalingSocket.off("call-accepted");
+      signalingSocket.off("call-rejected");
+      signalingSocket.off("call-ended");
     };
   }, []);
 
-  //caller side
-  const createPeerConnection = () => {
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-    });
-
-    pc.onicecandidate = (event) => {
-      if (event.candidate) {
-        signalingSocket.emit("ice-candidate", {
-          candidate: event.candidate,
-        });
-      }
-    };
-
-    pc.ontrack = (event) => {
-      setRemoteStream(event.streams[0]);
-    };
-
-    return pc;
-  };
-
-  const startCall = async (activeConversation, video = true) => {
-    if (!signalingSocket || !signalingSocket.connected) {
-      console.error("Socket not connected. Cannot start call.");
-      return;
-    }
+  const startCall = async (activeConversation, isVideoCall) => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video,
+        video: isVideoCall,
         audio: true,
       });
       setLocalStream(stream);
-
-      peerConnection.current = createPeerConnection();
-      stream
-        .getTracks()
-        .forEach((track) => peerConnection.current.addTrack(track, stream));
-
-      const offer = await peerConnection.current.createOffer();
-      await peerConnection.current.setLocalDescription(offer);
-
-      signalingSocket.emit("call-user", {
-        callerId: auth.currentUser.uid,
-        callerName: auth.currentUser.displayName,
-        recipientId: activeConversation?.uid,
-        isVideoCall: video,
-        sdp: offer,
+  
+      console.log("Creating Peer instance...");
+      peerRef.current = new Peer({ initiator: true, trickle: false, stream });
+  
+      peerRef.current.on("signal", (data) => {
+        console.log("Emitting outgoing call with signal:", data);
+        if (!data) {
+          console.error("Error: Generated signal data is undefined");
+          return;
+        }
+        signalingSocket.emit("call-user", {
+          callerId: user.uid,
+          recipientId: activeConversation?.uid,
+          isVideoCall,
+          signal: data,
+        });
       });
-
+  
+      peerRef.current.on("stream", (remoteStream) => {
+        console.log("Receiving remote stream");
+        setRemoteStream(remoteStream);
+      });
+  
+      console.log("Waiting for Peer to generate signal...");
       setIsCalling(true);
     } catch (error) {
       console.error("Error starting call:", error);
     }
   };
-
-  const handleEndCall = () => {
-    if (peerConnection.current) {
-      peerConnection.current.close();
-      peerConnection.current = null;
+  
+  const handleAcceptCall = async () => {
+    if (!incomingCall || !incomingCall.signal) {
+      console.error("Error: Incoming call data is missing or invalid", incomingCall);
+      return;
     }
-
-    if (signalingSocket && auth.currentUser) {
-      signalingSocket.emit("end-call", {
-        callerId: auth.currentUser.uid,
-        recipientId: remoteStream ? remoteStream.uid : null,
+  
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: incomingCall.isVideoCall,
+        audio: true,
       });
-    }
-
-    setIsCalling(false);
-    setIsInCall(false);
-    setLocalStream(null);
-    setRemoteStream(null);
-  };
-
-  const handleAcceptCall = () => {
-    if (incomingCall) {
-      if (!remoteSdp) {
-        console.error("No valid SDP received. Cannot accept call.");
+      setLocalStream(stream);
+  
+      console.log("Creating peer instance...");
+      const peer = new Peer({ initiator: false, trickle: false, stream });
+  
+      peerRef.current = peer;
+  
+      console.log("Peer instance created:", peerRef.current);
+  
+      peer.on("signal", (data) => {
+        console.log("Sending back accept signal:", data);
+        signalingSocket.emit("accept-call", {
+          callerId: incomingCall.callerId,
+          recipientId: user.uid,
+          signal: data,
+        });
+      });
+  
+      peer.on("stream", (remoteStream) => {
+        console.log("Receiving remote stream");
+        setRemoteStream(remoteStream);
+        //setIsCalling(true); // Move setIsCalling here
+      });
+  
+      console.log("Sending initial signal to peer:", incomingCall.signal);
+      if (!peerRef.current) {
+        console.error("Error: Peer instance is not initialized before signaling");
         return;
       }
-
-      console.log("Accepting call with SDP:", remoteSdp);
-
-      signalingSocket.emit("accept-call", {
-        callerId: incomingCall.callerId,
-        recipientId: user.uid,
-        sdp: remoteSdp,
-      });
+      peerRef.current.signal(incomingCall.signal);
+  
       setIncomingCall(null);
       setIsCalling(true);
+      setCurrentRecipient(incomingCall.callerId);
+    } catch (error) {
+      console.error("Error accepting call:", error);
     }
+  };
+  
+  
+  const handleEndCall = () => {
+    const recipientId = currentRecipient || incomingCall?.callerId;
+
+    signalingSocket.emit("end-call", { callerId: user.uid, recipientId });
+    if (peerRef.current) {
+      peerRef.current.destroy();
+      peerRef.current = null;
+    }
+    setIsCalling(false);
+    setLocalStream(null);
+    setRemoteStream(null);
+    setCurrentRecipient(null);
   };
 
   const handleDeclineCall = () => {
     if (incomingCall) {
-      signalingSocket.emit("reject-call", {
-        callerId: incomingCall.callerId,
-        recipientId: user.uid,
-      });
-
-      console.log("Call rejected");
-
-      setTimeout(() => setIncomingCall(null), 0);
+      signalingSocket.emit("reject-call", { callerId: incomingCall.callerId, recipientId: currentRecipient });
+      setIncomingCall(null);
+      setCurrentRecipient(null);
     }
   };
 
@@ -201,8 +200,6 @@ export const CallManagerProvider = ({ children }) => {
         remoteStream,
         startCall,
         handleEndCall,
-        isMinimized,
-        setIsMinimized,
         incomingCall,
         handleAcceptCall,
         handleDeclineCall,
@@ -212,7 +209,7 @@ export const CallManagerProvider = ({ children }) => {
       {isCalling && <FloatingCallWindow />}
       {incomingCall && (
         <CallNotification
-          callerName={incomingCall.callerName}
+          callerName={incomingCall.callerId}
           isVideoCall={incomingCall.isVideoCall}
           onAccept={handleAcceptCall}
           onDecline={handleDeclineCall}

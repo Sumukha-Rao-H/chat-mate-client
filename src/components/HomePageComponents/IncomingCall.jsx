@@ -6,7 +6,7 @@ const CallNotification = ({ callerName, isVideoCall, onAccept, onDecline }) => {
   const [timeLeft, setTimeLeft] = useState(30);
   
   // Choose different ringtones for audio and video calls (optional)
-  const ringtone = isVideoCall ? "/uploads/video_ringtone.mp3" : "/uploads/ringtone.mp3";
+  const ringtone = "/uploads/ringtone.mp3";
   const audio = new Audio(ringtone); 
 
   useEffect(() => {

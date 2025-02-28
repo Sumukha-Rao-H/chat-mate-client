@@ -1,12 +1,22 @@
 import React, { useRef, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useCallManager } from "../context/callManagerContext";
-import { ArrowsRightLeftIcon, PhoneXMarkIcon, MicrophoneIcon, VideoCameraIcon, VideoCameraSlashIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, SlashIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowsRightLeftIcon,
+  PhoneXMarkIcon,
+  MicrophoneIcon,
+  VideoCameraIcon,
+  VideoCameraSlashIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  SlashIcon,
+} from "@heroicons/react/24/outline";
 
 const positions = ["bottom-right", "bottom-left", "top-right", "top-left"];
 
 const FloatingCallWindow = () => {
-  const { isCalling, isMinimized, localStream, remoteStream, handleEndCall } = useCallManager();
+  const { isCalling, isMinimized, localStream, remoteStream, handleEndCall } =
+    useCallManager();
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
   const [isFullScreen, setIsFullScreen] = useState(false);
@@ -17,17 +27,35 @@ const FloatingCallWindow = () => {
   const isVideoCall = true;
 
   useEffect(() => {
-    if (localVideoRef.current && localStream) {
+    if (localStream && localVideoRef.current) {
+      console.log("🎥 Assigning local stream to video element.");
       localVideoRef.current.srcObject = localStream;
+    } else {
+      console.warn("⚠️ No local stream found.");
     }
-    if (remoteVideoRef.current && remoteStream) {
+
+    if (remoteStream && remoteVideoRef.current) {
+      console.log("📡 Assigning remote stream to video element.");
       remoteVideoRef.current.srcObject = remoteStream;
+
+      // 🔍 Ensure video plays to avoid NotSupportedError
+      remoteVideoRef.current.play().catch((err) => {
+        console.error("🚨 Video play error:", err);
+      });
+    } else {
+      console.warn("⚠️ No remote stream found.");
     }
   }, [localStream, remoteStream]);
 
   const getPositionStyles = () => {
     if (isFullScreen) {
-      return { top: 0, left: 0, width: "100vw", height: "100vh", borderRadius: "0px" };
+      return {
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        borderRadius: "0px",
+      };
     }
     const margin = 20;
     switch (position) {
@@ -67,39 +95,77 @@ const FloatingCallWindow = () => {
       <div className="w-full bg-gray-800 p-2 rounded-t-lg flex justify-between items-center">
         <span className="text-xs">Ongoing Call</span>
         <div className="flex gap-2">
-          <button onClick={cyclePosition} className="text-gray-300 hover:text-white">
+          <button
+            onClick={cyclePosition}
+            className="text-gray-300 hover:text-white"
+          >
             <ArrowsRightLeftIcon className="h-4 w-4" />
           </button>
           <button
             onClick={() => setIsFullScreen(!isFullScreen)}
             className="text-gray-300 hover:text-white"
           >
-            {isFullScreen ? <ArrowsPointingInIcon className="h-4 w-4" /> : <ArrowsPointingOutIcon className="h-4 w-4" />}
+            {isFullScreen ? (
+              <ArrowsPointingInIcon className="h-4 w-4" />
+            ) : (
+              <ArrowsPointingOutIcon className="h-4 w-4" />
+            )}
           </button>
         </div>
       </div>
 
       {/* Video Section */}
       <div className="relative w-full h-full">
-        <video ref={remoteVideoRef} autoPlay className="w-full h-full bg-black" />
-        <video
-          ref={localVideoRef}
-          autoPlay
-          muted
-          className="absolute bottom-2 right-2 w-20 h-20 border-2 border-white rounded-md shadow-md"
-        />
+        {remoteStream && (
+          <video
+            ref={remoteVideoRef}
+            autoPlay
+            playsInline
+            className="w-full h-full bg-black"
+          />
+        )}
+        {localStream && (
+          <video
+            ref={localVideoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute bottom-2 right-2 w-20 h-20 border-2 border-white rounded-md shadow-md"
+          />
+        )}
       </div>
-      <div className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3 transition-opacity duration-300 ${isHovered ? "opacity-100" : "opacity-0"}`}>
-        <button onClick={() => setIsMuted(!isMuted)} className="relative text-white hover:text-gray-300 w-6 h-6">
-          <MicrophoneIcon className={`h-6 w-6 ${isMuted ? "text-red-500" : "text-white"}`} />
-          {isMuted && <SlashIcon className="absolute top-0 left-0 h-6 w-6 size-10 rotate-[120deg] scale-125 text-red-500" />}
+      <div
+        className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3 transition-opacity duration-300 ${
+          isHovered ? "opacity-100" : "opacity-0"
+        }`}
+      >
+        <button
+          onClick={() => setIsMuted(!isMuted)}
+          className="relative text-white hover:text-gray-300 w-6 h-6"
+        >
+          <MicrophoneIcon
+            className={`h-6 w-6 ${isMuted ? "text-red-500" : "text-white"}`}
+          />
+          {isMuted && (
+            <SlashIcon className="absolute top-0 left-0 h-6 w-6 size-10 rotate-[120deg] scale-125 text-red-500" />
+          )}
         </button>
         {isVideoCall && (
-          <button onClick={() => setIsVideoOn(!isVideoOn)} className="text-white hover:text-gray-300">
-            {isVideoOn ? <VideoCameraIcon className="h-6 w-6" /> : <VideoCameraSlashIcon className="h-6 w-6 text-red-500" />}
+          <button
+            onClick={() => setIsVideoOn(!isVideoOn)}
+            className="text-white hover:text-gray-300"
+          >
+            {isVideoOn ? (
+              <VideoCameraIcon className="h-6 w-6" />
+            ) : (
+              <VideoCameraSlashIcon className="h-6 w-6 text-red-500" />
+            )}
           </button>
         )}
-        <button onClick={handleEndCall} className="text-red-500 hover:text-red-700">
+        <button
+          onClick={handleEndCall}
+          className="text-red-500 hover:text-red-700"
+        >
           <PhoneXMarkIcon className="h-6 w-6" />
         </button>
       </div>

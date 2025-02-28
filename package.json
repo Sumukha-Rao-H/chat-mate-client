@@ -17,6 +17,7 @@
     "login-signup-app": "file:",
     "nodemon": "^3.1.9",
     "pg": "^8.13.1",
+    "process": "^0.11.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-draggable": "^4.4.6",
@@ -24,6 +25,7 @@
     "react-router-dom": "^7.0.1",
     "react-scripts": "5.0.1",
     "sequelize": "^6.37.5",
+    "simple-peer": "^9.11.1",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "web-vitals": "^2.1.4"

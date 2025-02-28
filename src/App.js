@@ -10,8 +10,11 @@ import Layout from "./Layout";
 import { AuthProvider } from "./context/authContext";
 import { getAuth } from "firebase/auth";
 import { CallManagerProvider } from "./context/callManagerContext";
+import process from "process";
+window.process = process;
 
 function App() {
+
   const auth = getAuth();
   const user = auth.currentUser;
   const location = useLocation();
