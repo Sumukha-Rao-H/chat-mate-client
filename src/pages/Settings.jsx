@@ -237,11 +237,13 @@ const Settings = () => {
 
   return (
     <>
-      <div className="flex h-screen flex-col lg:flex-row pt-12">
+      <div className="flex h-screen flex-col lg:flex-row pt-12 w-full">
         {/* Sidebar for larger screens */}
-        <div className="lg:w-1/4 bg-gray-200 p-4 lg:block hidden">
-          <h1 className="text-2xl font-bold mb-6">Settings</h1>
-          <ul className="space-y-4">
+        <div className="w-full lg:w-1/4 bg-gray-200 border-r border-gray-300 flex-grow lg:block hidden">
+          <div className="bg-gray-200 px-5 py-4 shadow-md">
+            <h1 className="text-2xl font-bold text-gray-800">Settings</h1>
+          </div>
+          <ul className="space-y-4 px-4 py-4">
             {["Account", "Notifications", "Privacy"].map((category) => (
               <li
                 key={category}

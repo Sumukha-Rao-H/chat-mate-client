@@ -109,7 +109,7 @@ const ProfileImage = ({ imageUrl, onChangeImage }) => {
       <img
         src={imageUrl}
         alt="Profile"
-        className="w-32 h-32 rounded-full object-cover cursor-pointer"
+        className="w-32 h-32 rounded-full object-cover cursor-pointer transition-all duration-300 hover:ring-2 ring-gray-500"
         onClick={togglePopup}
       />
 

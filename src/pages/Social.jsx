@@ -307,9 +307,9 @@ const Social = () => {
                       </div>
                       <button
                         onClick={() => handleSendRequest(curUser, user)}
-                        className="bg-gray-300 text-black px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
+                        className="bg-gray-300 text-black px-3 py-1 w-11 h-11 rounded-full hover:bg-gray-600 hover:text-white"
                       >
-                        <UserPlusIcon className="w-5 h-5 inline-block" />
+                        <UserPlusIcon className="w-6 h-6 inline-block" />
                       </button>
                     </li>
                   ))}
@@ -361,9 +361,9 @@ const Social = () => {
                     <div className="flex items-center space-x-3">
                       <button
                         onClick={() => handleAcceptRequest(req.id)}
-                        className="bg-gray-500 text-white px-3 py-1 w-10 h-10 rounded-full hover:bg-gray-600 hover:text-white"
+                        className="bg-gray-500 text-white px-3 py-1 w-11 h-11 rounded-full hover:bg-gray-600 hover:text-white"
                       >
-                        <UserPlusIcon className="w-5 h-5 inline-block" />
+                        <UserPlusIcon className="w-6 h-6 inline-block" />
                       </button>
                       <button
                         onClick={() => handleRejectRequest(req.id)}
@@ -390,9 +390,11 @@ const Social = () => {
     <>
       <div className="flex h-screen flex-col lg:flex-row pt-12">
         {/* Sidebar for larger screens */}
-        <div className="lg:w-1/4 bg-gray-200 p-4 lg:block hidden">
-          <h1 className="text-2xl font-bold mb-6">Social</h1>
-          <ul className="space-y-4">
+        <div className="w-full lg:w-1/4 bg-gray-200 border-r border-gray-300 flex-grow lg:block hidden">
+        <div className="bg-gray-200 px-5 py-4 shadow-md">
+            <h1 className="text-2xl font-bold text-gray-800">Social</h1>
+          </div>
+          <ul className="space-y-4 px-4 py-4">
             {["Friends", "Search", "Requests"].map((category) => (
               <li
                 key={category}

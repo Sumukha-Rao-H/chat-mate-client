@@ -10,7 +10,7 @@ const Sidebar = ({ handleSelectConversation }) => {
 
   useEffect(() => {
     fetchFriends(user);
-  }, [user]); 
+  }, [user]);
 
   const fetchFriends = async (userId) => {
     try {
@@ -102,21 +102,24 @@ const Sidebar = ({ handleSelectConversation }) => {
       {/* Mobile Sidebar */}
       <div className="w-full bg-gray-200 border-b border-gray-300 md:hidden fixed inset-0 z-10">
         <div className="flex flex-col h-full">
-          <div className="bg-gray-200 px-5 py-4 shadow-md">
+          {/* Header */}
+          <div className="bg-gray-200 px-5 py-4 shadow-md flex items-center justify-between">
             <h1 className="text-xl font-bold text-gray-800">Chats</h1>
           </div>
+
+          {/* Chat List */}
           <div className="flex-grow overflow-y-auto">
             {loading || friends.length === 0 ? (
-              <div>
+              <div className="space-y-3 px-5 py-4">
                 {Array.from({ length: 5 }).map((_, index) => (
                   <div
                     key={index}
-                    className="flex items-center px-5 py-3 animate-pulse space-x-3"
+                    className="flex items-center space-x-4 animate-pulse"
                   >
-                    <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
                     <div className="flex flex-col space-y-2">
-                      <div className="w-24 h-4 bg-gray-300 rounded"></div>
-                      <div className="w-16 h-3 bg-gray-300 rounded"></div>
+                      <div className="w-32 h-4 bg-gray-300 rounded"></div>
+                      <div className="w-20 h-3 bg-gray-300 rounded"></div>
                     </div>
                   </div>
                 ))}
@@ -125,21 +128,24 @@ const Sidebar = ({ handleSelectConversation }) => {
               friends.map((friend) => (
                 <div
                   key={friend.uid}
-                  className="flex items-center px-5 py-3 hover:bg-gray-300 cursor-pointer transition-all"
+                  className="flex items-center px-5 py-4 rounded-lg transition-all duration-200 hover:bg-gray-300 active:bg-gray-400 cursor-pointer"
                   onClick={() => handleSelectConversation(friend)}
                 >
+                  {/* Profile Image */}
                   <img
                     src={friend.photoUrl}
-                    alt="Friend"
-                    className="w-10 h-10 rounded-full object-cover"
+                    alt={friend.displayName}
+                    className="w-12 h-12 rounded-full object-cover"
                   />
-                  <div>
-                    <div className=" px-3 font-semibold text-gray-800">
+
+                  {/* Friend Info */}
+                  <div className="ml-3 flex flex-col">
+                    <span className="font-semibold text-gray-800 text-lg">
                       {friend.displayName}
-                    </div>
-                    <div className="text-sm px-3 text-gray-500">
+                    </span>
+                    <span className="text-sm text-gray-500">
                       {friend.lastMessage || "Start a conversation"}
-                    </div>
+                    </span>
                   </div>
                 </div>
               ))
