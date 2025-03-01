@@ -115,13 +115,13 @@ const FloatingCallWindow = () => {
       </div>
 
       {/* Video Section */}
-      <div className="relative w-full h-full">
+      <div className="relative w-full h-full flex items-center justify-center bg-black">
         {remoteStream && (
           <video
             ref={remoteVideoRef}
             autoPlay
             playsInline
-            className="w-full h-full bg-black"
+            className="absolute w-full h-full object-cover"
           />
         )}
         {localStream && (
@@ -130,43 +130,68 @@ const FloatingCallWindow = () => {
             autoPlay
             playsInline
             muted
-            className="absolute bottom-2 right-2 w-20 h-20 border-2 border-white rounded-md shadow-md"
+            className={`absolute border-2 border-white rounded-md shadow-md object-cover transition-all duration-300 
+              ${
+                isFullScreen
+                  ? "w-32 h-32 bottom-4 right-4"
+                  : "w-20 h-20 bottom-2 right-2"
+              }`}
           />
         )}
       </div>
       <div
-        className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-3 transition-opacity duration-300 ${
+        className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 flex gap-4 transition-opacity duration-300 ${
           isHovered ? "opacity-100" : "opacity-0"
         }`}
       >
         <button
           onClick={() => setIsMuted(!isMuted)}
-          className="relative text-white hover:text-gray-300 w-6 h-6"
+          className="relative text-white hover:text-gray-300"
         >
           <MicrophoneIcon
-            className={`h-6 w-6 ${isMuted ? "text-red-500" : "text-white"}`}
+            className={`transition-all duration-300 ${
+              isFullScreen ? "h-8 w-8" : "h-6 w-6"
+            } ${isMuted ? "text-red-500" : "text-white"}`}
           />
           {isMuted && (
-            <SlashIcon className="absolute top-0 left-0 h-6 w-6 size-10 rotate-[120deg] scale-125 text-red-500" />
+            <SlashIcon
+              className={`absolute top-0 left-0 rotate-[120deg] scale-125 text-red-500 transition-all duration-300 ${
+                isFullScreen ? "h-8 w-8" : "h-6 w-6"
+              }`}
+            />
           )}
         </button>
+
         {isVideoCall && (
           <button
             onClick={() => setIsVideoOn(!isVideoOn)}
             className="text-white hover:text-gray-300"
           >
             {isVideoOn ? (
-              <VideoCameraIcon className="h-6 w-6" />
+              <VideoCameraIcon
+                className={`transition-all duration-300 ${
+                  isFullScreen ? "h-8 w-8" : "h-6 w-6"
+                }`}
+              />
             ) : (
-              <VideoCameraSlashIcon className="h-6 w-6 text-red-500" />
+              <VideoCameraSlashIcon
+                className={`transition-all duration-300 text-red-500 ${
+                  isFullScreen ? "h-8 w-8" : "h-6 w-6"
+                }`}
+              />
             )}
           </button>
         )}
+
         <button
           onClick={handleEndCall}
           className="text-red-500 hover:text-red-700"
         >
-          <PhoneXMarkIcon className="h-6 w-6" />
+          <PhoneXMarkIcon
+            className={`transition-all duration-300 ${
+              isFullScreen ? "h-8 w-8" : "h-6 w-6"
+            }`}
+          />
         </button>
       </div>
     </motion.div>
