@@ -8,6 +8,7 @@ import {
   ArrowLeftIcon,
   PaperClipIcon,
 } from "@heroicons/react/24/outline";
+import  MediaGallery  from "./MediaGallery.jsx";
 
 const ChatWindow = ({
   activeConversation,
@@ -29,6 +30,32 @@ const ChatWindow = ({
     startCall,
     handleEndCall,
   } = useCallManager();
+
+  const mediaItems = [
+    { id: 1, type: 'image', url: 'https://picsum.photos/id/1015/1920/1080' },
+    { id: 2, type: 'video', url: 'https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg' },
+    { id: 3, type: 'image', url: 'https://picsum.photos/id/1016/1920/1080' },
+  
+    { id: 4, type: 'image', url: 'https://picsum.photos/id/1018/1920/1080' },
+    { id: 5, type: 'video', url: 'https://img.youtube.com/vi/oHg5SJYRHA0/maxresdefault.jpg' },
+    { id: 6, type: 'image', url: 'https://picsum.photos/id/1020/2560/1440' },
+  
+    { id: 7, type: 'image', url: 'https://picsum.photos/id/1024/2560/1440' },
+    { id: 8, type: 'video', url: 'https://img.youtube.com/vi/9bZkp7q19f0/maxresdefault.jpg' },
+    { id: 9, type: 'image', url: 'https://picsum.photos/id/1025/2560/1440' },
+  
+    { id: 10, type: 'image', url: 'https://picsum.photos/id/1027/2560/1440' },
+    { id: 11, type: 'video', url: 'https://img.youtube.com/vi/3JZ_D3ELwOQ/maxresdefault.jpg' },
+    { id: 12, type: 'image', url: 'https://picsum.photos/id/1033/2560/1440' },
+  
+    { id: 13, type: 'image', url: 'https://picsum.photos/id/1035/2560/1440' },
+    { id: 14, type: 'video', url: 'https://img.youtube.com/vi/L_jWHffIx5E/maxresdefault.jpg' },
+    { id: 15, type: 'image', url: 'https://picsum.photos/id/1038/2560/1440' },
+  
+    { id: 17, type: 'video', url: 'https://img.youtube.com/vi/fJ9rUzIMcZQ/maxresdefault.jpg' },
+    { id: 16, type: 'image', url: 'https://picsum.photos/id/1040/2560/1440' },
+  ];  
+  
 
   const lastMessageRef = useRef(null)
   
@@ -65,6 +92,8 @@ const ChatWindow = ({
               />
             </div>
           </div>
+
+          <MediaGallery mediaItems={mediaItems} />
 
           {/* Chat Messages Container */}
           <div className="flex flex-col flex-grow overflow-hidden">
