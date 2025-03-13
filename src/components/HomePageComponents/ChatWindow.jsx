@@ -290,8 +290,13 @@ const ChatWindow = ({
 
                       {/* PDF Preview */}
                       {file.type.includes("pdf") && (
-                        <div className="flex items-center justify-center h-16 w-16 bg-gray-100 rounded-md text-xs text-center px-2">
-                          <span>{file.name}</span>
+                        <div className="flex items-center bg-gray-100 px-4 py-2 rounded-md max-w-[200px] relative">
+                          <span
+                            className="text-sm font-medium truncate"
+                            title={file.name} // shows full name on hover
+                          >
+                            {file.name}
+                          </span>
                         </div>
                       )}
 
@@ -322,9 +327,13 @@ const ChatWindow = ({
               onClick={
                 selectedFiles.length > 0 ? handleSendFiles : handleSendMessage
               }
-              disabled={isUploading || selectedFiles.length === 0}
+              disabled={
+                isUploading ||
+                (selectedFiles.length === 0 && newMessage.trim() === "")
+              }
               className={`bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all ${
-                isUploading || selectedFiles.length === 0
+                isUploading ||
+                (selectedFiles.length === 0 && newMessage.trim() === "")
                   ? "opacity-50 cursor-not-allowed"
                   : ""
               }`}
