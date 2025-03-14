@@ -4,7 +4,14 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
-import { ArrowRight, Download, Share2, CheckSquare, Square } from "lucide-react";
+import {
+  ArrowRight,
+  Download,
+  Share2,
+  CheckSquare,
+  Square,
+  FileTextIcon,
+} from "lucide-react";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -24,7 +31,7 @@ const MediaGallery = ({ mediaItems = [] }) => {
   const startIndex = page * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const currentItems = mediaItems.slice(startIndex, endIndex);
-  const latestItem = mediaItems[mediaItems.length - 1];
+  const latestItem = mediaItems[0];
   const [currentIndex, setCurrentIndex] = useState(0);
   const currentItem = mediaItems[currentIndex];
 
@@ -50,7 +57,9 @@ const MediaGallery = ({ mediaItems = [] }) => {
 
     if (allSelected) {
       // Deselect all
-      setSelectedItems((prev) => prev.filter((id) => !pageItemIds.includes(id)));
+      setSelectedItems((prev) =>
+        prev.filter((id) => !pageItemIds.includes(id))
+      );
     } else {
       // Select all
       setSelectedItems((prev) => [...new Set([...prev, ...pageItemIds])]);
@@ -62,7 +71,7 @@ const MediaGallery = ({ mediaItems = [] }) => {
       const response = await fetch(url, { mode: "cors" }); // mode may vary based on CORS policy
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-  
+
       const a = document.createElement("a");
       a.href = blobUrl;
       a.download = filename || "download"; // Optional custom name
@@ -166,14 +175,22 @@ const MediaGallery = ({ mediaItems = [] }) => {
                 alt={`Latest Media`}
                 className="w-full h-full object-cover"
               />
-            ) : (
+            ) : latestItem.type === "video" ? (
               <div className="relative w-full h-full bg-black flex items-center justify-center">
-                <img
+                <video
                   src={latestItem.url}
-                  alt={`Latest Video`}
                   className="w-full h-full object-cover opacity-70"
+                  muted
+                  preload="metadata"
                 />
                 <span className="absolute text-white text-xs font-bold">▶</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-700">
+                <FileTextIcon className="h-8 w-8 mb-2" />
+                <span className="text-xs truncate px-2 text-center">
+                  {latestItem.name || "Document"}
+                </span>
               </div>
             )
           ) : (
@@ -201,7 +218,9 @@ const MediaGallery = ({ mediaItems = [] }) => {
                   onClick={selectAll}
                   className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
                 >
-                  {currentItems.every((item) => selectedItems.includes(item.id)) ? (
+                  {currentItems.every((item) =>
+                    selectedItems.includes(item.id)
+                  ) ? (
                     <>
                       <CheckSquare className="h-4 w-4" /> Deselect All
                     </>
@@ -262,7 +281,7 @@ const MediaGallery = ({ mediaItems = [] }) => {
 
                     <div
                       onClick={() => setFullscreenMedia(item)}
-                      className="w-full h-full flex items-center justify-center hover:opacity-80 transition"
+                      className="w-full h-full flex items-center justify-center hover:opacity-80 transition relative"
                     >
                       {item.type === "image" ? (
                         <img
@@ -270,22 +289,32 @@ const MediaGallery = ({ mediaItems = [] }) => {
                           alt={`Media ${item.id}`}
                           className="w-full h-full object-cover"
                         />
-                      ) : (
-                        <div className="relative w-full h-full bg-black flex items-center justify-center text-white text-xs">
-                          <img
+                      ) : item.type === "video" ? (
+                        <>
+                          <video
                             src={item.url}
-                            alt={`Video ${item.id}`}
+                            muted
+                            preload="metadata"
                             className="w-full h-full object-cover opacity-70"
                           />
-                          <span className="absolute text-sm font-bold">▶</span>
+                          <span className="absolute text-sm font-bold text-white">
+                            ▶
+                          </span>
+                        </>
+                      ) : (
+                        <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-700">
+                          <FileTextIcon className="h-8 w-8 mb-2" />
+                          <span className="text-xs truncate px-2 text-center">
+                            {latestItem.name || "Document"}
+                          </span>
                         </div>
                       )}
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-xs text-gray-500 col-span-3 text-center">
-                  No media files
+                <p className="text-xs text-gray-500 col-span-3">
+                  No Media Items
                 </p>
               )}
             </div>
@@ -295,30 +324,26 @@ const MediaGallery = ({ mediaItems = [] }) => {
               <button
                 onClick={handlePrevPage}
                 disabled={page === 0}
-                className={`flex items-center gap-1 text-xs ${
+                className={`p-1 rounded ${
                   page === 0
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-500 hover:underline"
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 <ChevronLeftIcon className="h-4 w-4" />
-                Previous
               </button>
-
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-600">
                 Page {page + 1} of {totalPages}
               </span>
-
               <button
                 onClick={handleNextPage}
                 disabled={page === totalPages - 1}
-                className={`flex items-center gap-1 text-xs ${
+                className={`p-1 rounded ${
                   page === totalPages - 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-blue-500 hover:underline"
+                    ? "text-gray-300 cursor-not-allowed"
+                    : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                Next
                 <ChevronRightIcon className="h-4 w-4" />
               </button>
             </div>
@@ -356,7 +381,9 @@ const MediaGallery = ({ mediaItems = [] }) => {
               {/* Buttons */}
               <div className="absolute bottom-8 flex gap-4">
                 <button
-                  onClick={() => downloadFile(fullscreenMedia.url, fullscreenMedia.name)}
+                  onClick={() =>
+                    downloadFile(fullscreenMedia.url, fullscreenMedia.name)
+                  }
                   download
                   target="_blank"
                   rel="noopener noreferrer"
