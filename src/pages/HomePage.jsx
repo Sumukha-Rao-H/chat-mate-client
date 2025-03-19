@@ -8,6 +8,13 @@ import {
   verifyOrGenerateKeysForUser,
   getPrivateKey,
 } from "../functions/generateKeyPair";
+import {
+  generateAESKey,
+  encryptFileWithAES,
+  exportAESKey,
+  encryptAESKeyWithRSA,
+  createEncryptedBlob,
+} from "../functions/fileEncryption";
 
 const Home = () => {
   const auth = getAuth();
@@ -148,20 +155,21 @@ const Home = () => {
       let receiverPublicKey = null;
       let senderPublicKey = null;
 
-      if (textMessage.trim() !== "") {
-        const receiverKeyResponse = await fetch(
-          `${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${activeConversation.uid}`
-        );
-        if (!receiverKeyResponse.ok)
-          throw new Error("Failed to fetch receiver's public key");
-        receiverPublicKey = (await receiverKeyResponse.json()).publicKey;
+      const receiverKeyResponse = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${activeConversation.uid}`
+      );
+      if (!receiverKeyResponse.ok)
+        throw new Error("Failed to fetch receiver's public key");
+      receiverPublicKey = (await receiverKeyResponse.json()).publicKey;
 
-        const senderKeyResponse = await fetch(
-          `${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${curUser.uid}`
-        );
-        if (!senderKeyResponse.ok)
-          throw new Error("Failed to fetch sender's public key");
-        senderPublicKey = (await senderKeyResponse.json()).publicKey;
+      const senderKeyResponse = await fetch(
+        `${process.env.REACT_APP_SERVER_URL}/api/getPublicKey/${curUser.uid}`
+      );
+      if (!senderKeyResponse.ok)
+        throw new Error("Failed to fetch sender's public key");
+      senderPublicKey = (await senderKeyResponse.json()).publicKey;
+
+      if (textMessage.trim() !== "") {
 
         // Encrypt the message for both sender and receiver
         const encryptedMessageR = await encryptMessage(
@@ -192,81 +200,118 @@ const Home = () => {
 
       // Handle sending files if there are any
       if (files.length > 0) {
-        // console.log("Sending files:", files);
+
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const fileObj = file.file;
-        //   console.log("Uploading file:", fileObj.name);
 
-          const formData = new FormData();
-          formData.append("file", fileObj);
-          formData.append(
-            "upload_preset",
-            process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
-          );
+          try {
+            // Step 1: Generate AES key
+            const aesKey = await generateAESKey();
 
-          let uploadEndpoint = `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}`;
+            // Step 2: Encrypt the file with AES key
+            const { encryptedContent, iv } = await encryptFileWithAES(
+              fileObj,
+              aesKey
+            );
 
-          let mediaType = "";
-          if (fileObj.type.startsWith("image/")) {
-            uploadEndpoint += "/image/upload";
-            mediaType = "image";
-          } else if (fileObj.type.startsWith("video/")) {
-            uploadEndpoint += "/video/upload";
-            mediaType = "video";
-          } else {
-            uploadEndpoint += "/raw/upload";
-            mediaType = "document";
+            // Step 3: Export the raw AES key
+            const rawAesKey = await exportAESKey(aesKey);
+
+            // Step 4: Encrypt the raw AES key with receiver's RSA public key
+            const encryptedAESKeyR = await encryptAESKeyWithRSA(
+              receiverPublicKey,
+              rawAesKey
+            );
+
+            // Step 4: Encrypt the raw AES key with sender's RSA public key
+            const encryptedAESKeyS = await encryptAESKeyWithRSA(
+              senderPublicKey,
+              rawAesKey
+            );
+
+            // Step 5: Create a Blob from encrypted content for upload
+            const encryptedBlob = createEncryptedBlob(encryptedContent);
+
+            // Step 6: Prepare form data for Cloudinary upload
+            const formData = new FormData();
+            formData.append("file", encryptedBlob, fileObj.name); // Add original file name for reference
+            formData.append(
+              "upload_preset",
+              process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
+            );
+
+            let uploadEndpoint = `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/raw/upload`;
+            let mediaType = "";
+
+            if (fileObj.type.startsWith("image/")) {
+              mediaType = "image";
+            } else if (fileObj.type.startsWith("video/")) {
+              mediaType = "video";
+            } else {
+              mediaType = "document";
+            }
+
+            // Step 7: Upload encrypted blob to Cloudinary
+            const response = await fetch(uploadEndpoint, {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              console.error(`Upload failed for file ${fileObj.name}`);
+              continue;
+            }
+
+            const data = await response.json();
+            const uploadedFileUrl = data.secure_url;
+
+            if (!uploadedFileUrl) {
+              console.error(`No URL returned for file: ${fileObj.name}`);
+              continue;
+            }
+
+            console.log(arrayBufferToBase64(encryptedAESKeyS));
+            console.log(arrayBufferToBase64(encryptedAESKeyR));
+            // Step 8: Send the file message along with encrypted AES key and iv
+            const message = {
+              senderId: curUser.uid,
+              receiverId: activeConversation.uid,
+              mediaUrl: uploadedFileUrl,
+              mediaType: mediaType,
+              encryptedAESKeyS: arrayBufferToBase64(encryptedAESKeyS),
+              encryptedAESKeyR: arrayBufferToBase64(encryptedAESKeyR),
+              iv: arrayBufferToBase64(iv), // Send IV as Base64 too
+              originalFileName: fileObj.name,
+            };
+
+            // Emit encrypted file message
+            chatSocket.emit("sendMessage", message);
+
+            // Update local messages UI
+            setMessages((prev) => [...prev, { ...message }]);
+          } catch (err) {
+            console.error(
+              `Error encrypting or uploading file: ${fileObj.name}`,
+              err
+            );
           }
-        //   console.log("upload endpoint:", uploadEndpoint);
-
-          const response = await fetch(uploadEndpoint, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (!response.ok) {
-            console.error(`Upload failed for file ${file.name}`);
-            continue;
-          }
-
-          const data = await response.json();
-          const uploadedFileUrl = data.secure_url;
-
-          if (!uploadedFileUrl) {
-            console.error(`No URL returned for file: ${file.name}`);
-            continue;
-          }
-
-          if (fileObj.type.startsWith("image/")) {
-            mediaType = "image";
-          } else if (fileObj.type.startsWith("video/")) {
-            mediaType = "video";
-          } else {
-            mediaType = "document";
-          }
-
-          const message = {
-            senderId: curUser.uid,
-            receiverId: activeConversation.uid,
-            mediaUrl: uploadedFileUrl,
-            mediaType: mediaType,
-          };
-
-          // Emit file message
-          chatSocket.emit("sendMessage", message);
-
-          // Update local messages
-          setMessages((prev) => [...prev, { ...message }]);
         }
       }
 
-    //   setNewMessage(""); // clear input field
+      //   setNewMessage(""); // clear input field
       scrollToBottom(); // or whatever your scrolling function is
     } catch (error) {
       console.error("Error sending message or file:", error);
     }
   };
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    return btoa(binary);
+  }
 
   const handleBackToConversations = () => {
     setActiveConversation(null); // Reset the active conversation
