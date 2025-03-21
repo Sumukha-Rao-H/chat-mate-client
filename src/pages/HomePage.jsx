@@ -200,50 +200,48 @@ const Home = () => {
 
       // Handle sending files if there are any
       if (files.length > 0) {
-
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const fileObj = file.file;
-
+      
           try {
             // Step 1: Generate AES key
             const aesKey = await generateAESKey();
-
+      
             // Step 2: Encrypt the file with AES key
             const { encryptedContent, iv } = await encryptFileWithAES(
               fileObj,
               aesKey
             );
-
+      
             // Step 3: Export the raw AES key
             const rawAesKey = await exportAESKey(aesKey);
-
-            // Step 4: Encrypt the raw AES key with receiver's RSA public key
-            const encryptedAESKeyR = await encryptAESKeyWithRSA(
-              receiverPublicKey,
-              rawAesKey
-            );
-
-            // Step 4: Encrypt the raw AES key with sender's RSA public key
-            const encryptedAESKeyS = await encryptAESKeyWithRSA(
-              senderPublicKey,
-              rawAesKey
-            );
-
-            // Step 5: Create a Blob from encrypted content for upload
+      
+            // -- Commenting out RSA encryption for now --
+            // const encryptedAESKeyR = await encryptAESKeyWithRSA(
+            //   receiverPublicKey,
+            //   rawAesKey
+            // );
+      
+            // const encryptedAESKeyS = await encryptAESKeyWithRSA(
+            //   senderPublicKey,
+            //   rawAesKey
+            // );
+      
+            // Step 4: Create a Blob from encrypted content for upload
             const encryptedBlob = createEncryptedBlob(encryptedContent);
-
-            // Step 6: Prepare form data for Cloudinary upload
+      
+            // Step 5: Prepare form data for Cloudinary upload
             const formData = new FormData();
-            formData.append("file", encryptedBlob, fileObj.name); // Add original file name for reference
+            formData.append("file", encryptedBlob, fileObj.name);
             formData.append(
               "upload_preset",
               process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET
             );
-
+      
             let uploadEndpoint = `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/raw/upload`;
             let mediaType = "";
-
+      
             if (fileObj.type.startsWith("image/")) {
               mediaType = "image";
             } else if (fileObj.type.startsWith("video/")) {
@@ -251,53 +249,52 @@ const Home = () => {
             } else {
               mediaType = "document";
             }
-
-            // Step 7: Upload encrypted blob to Cloudinary
+      
+            // Step 6: Upload encrypted blob to Cloudinary
             const response = await fetch(uploadEndpoint, {
               method: "POST",
               body: formData,
             });
-
+      
             if (!response.ok) {
               console.error(`Upload failed for file ${fileObj.name}`);
               continue;
             }
-
+      
             const data = await response.json();
             const uploadedFileUrl = data.secure_url;
-
+      
             if (!uploadedFileUrl) {
               console.error(`No URL returned for file: ${fileObj.name}`);
               continue;
             }
-
-            console.log(arrayBufferToBase64(encryptedAESKeyS));
-            console.log(arrayBufferToBase64(encryptedAESKeyR));
-            // Step 8: Send the file message along with encrypted AES key and iv
+      
+            console.log("Raw AES Key (Base64):", arrayBufferToBase64(rawAesKey));
+      
+            // Step 7: Send the file message with raw AES key (testing purpose)
             const message = {
               senderId: curUser.uid,
               receiverId: activeConversation.uid,
               mediaUrl: uploadedFileUrl,
               mediaType: mediaType,
-              encryptedAESKeyS: arrayBufferToBase64(encryptedAESKeyS),
-              encryptedAESKeyR: arrayBufferToBase64(encryptedAESKeyR),
-              iv: arrayBufferToBase64(iv), // Send IV as Base64 too
+              encryptedAESKeyS: null, // Skipping RSA encryption
+              encryptedAESKeyR: null, // Skipping RSA encryption
+              rawAESKey: arrayBufferToBase64(rawAesKey), // For testing purposes only!
+              iv: arrayBufferToBase64(iv),
               originalFileName: fileObj.name,
             };
-
+      
             // Emit encrypted file message
             chatSocket.emit("sendMessage", message);
-
+      
             // Update local messages UI
             setMessages((prev) => [...prev, { ...message }]);
           } catch (err) {
-            console.error(
-              `Error encrypting or uploading file: ${fileObj.name}`,
-              err
-            );
+            console.error(`Error encrypting or uploading file: ${fileObj.name}`, err);
           }
         }
       }
+      
 
       //   setNewMessage(""); // clear input field
       scrollToBottom(); // or whatever your scrolling function is

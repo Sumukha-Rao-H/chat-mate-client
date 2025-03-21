@@ -33,30 +33,185 @@ const ChatWindow = ({
   } = useCallManager();
 
   const [mediaItems, setMediaItems] = useState([]);
+  const [decryptedMessages, setDecryptedMessages] = useState([]);
+
+  // useEffect(() => {
+  //   if (!messages || messages.length === 0) {
+  //     setMediaItems([]); // No messages
+  //     return;
+  //   }
+
+  //   const decryptFiles = async () => {
+  //     const decryptedMediaItems = [];
+
+  //     for (const [index, msg] of messages.entries()) {
+  //       if (!msg.mediaUrl || !msg.rawAESKey || !msg.iv) continue;
+
+  //       try {
+  //         // Step 1: Fetch encrypted file as ArrayBuffer
+  //         const response = await fetch(msg.mediaUrl);
+  //         const encryptedArrayBuffer = await response.arrayBuffer();
+
+  //         // Step 2: Convert rawAESKey (Base64) back to ArrayBuffer
+  //         const rawAESKeyBuffer = base64ToArrayBuffer(msg.rawAESKey);
+
+  //         // Step 3: Import AES key
+  //         const aesKey = await window.crypto.subtle.importKey(
+  //           "raw",
+  //           rawAESKeyBuffer,
+  //           "AES-GCM",
+  //           true,
+  //           ["decrypt"]
+  //         );
+
+  //         // Step 4: Convert IV from Base64 to ArrayBuffer
+  //         const ivBuffer = base64ToArrayBuffer(msg.iv);
+
+  //         // Step 5: Decrypt file
+  //         const decryptedArrayBuffer = await window.crypto.subtle.decrypt(
+  //           {
+  //             name: "AES-GCM",
+  //             iv: ivBuffer,
+  //           },
+  //           aesKey,
+  //           encryptedArrayBuffer
+  //         );
+
+  //         // Step 6: Create Blob and Object URL from decrypted data
+  //         const mimeType = getMimeTypeFromType(msg.mediaType);
+  //         const decryptedBlob = new Blob([decryptedArrayBuffer], {
+  //           type: mimeType,
+  //         });
+  //         const decryptedUrl = URL.createObjectURL(decryptedBlob);
+
+  //         // Step 7: Push to mediaItems array
+  //         decryptedMediaItems.push({
+  //           id: msg.id || index,
+  //           type: msg.mediaType || getFileType(msg.mediaUrl),
+  //           url: decryptedUrl,
+  //           createdAt: msg.createdAt,
+  //         });
+  //       } catch (err) {
+  //         console.error(
+  //           `Failed to decrypt file for message ${msg.id || index}:`,
+  //           err
+  //         );
+  //       }
+  //     }
+
+  //     // Optional: Sort by date, latest first, and reverse if needed
+  //     decryptedMediaItems.sort((a, b) => {
+  //       const dateA = new Date(a.createdAt).getTime();
+  //       const dateB = new Date(b.createdAt).getTime();
+  //       return dateB - dateA; // Descending
+  //     });
+
+  //     setMediaItems(decryptedMediaItems.reverse()); // Optional: reverse for oldest first
+  //   };
+
+  //   decryptFiles();
+  // }, [messages]);
 
   useEffect(() => {
-    if (!messages || messages.length === 0) {
-      setMediaItems([]); // No messages
-      return;
-    }
+    if (!messages || messages.length === 0) return;
 
-    const updatedMediaItems = messages
-      .filter((msg) => msg.mediaUrl)
-      .sort((a, b) => {
+    const decryptFiles = async () => {
+      const updatedMessages = await Promise.all(
+        messages.map(async (msg, index) => {
+          if (!msg.mediaUrl || !msg.rawAESKey || !msg.iv) {
+            return msg; // No encrypted media, just return as-is
+          }
+
+          try {
+            const response = await fetch(msg.mediaUrl);
+            const encryptedArrayBuffer = await response.arrayBuffer();
+
+            const rawAESKeyBuffer = base64ToArrayBuffer(msg.rawAESKey);
+            const aesKey = await window.crypto.subtle.importKey(
+              "raw",
+              rawAESKeyBuffer,
+              "AES-GCM",
+              true,
+              ["decrypt"]
+            );
+
+            const ivBuffer = base64ToArrayBuffer(msg.iv);
+
+            const decryptedArrayBuffer = await window.crypto.subtle.decrypt(
+              {
+                name: "AES-GCM",
+                iv: ivBuffer,
+              },
+              aesKey,
+              encryptedArrayBuffer
+            );
+
+            const mimeType = getMimeTypeFromType(msg.mediaType);
+            const decryptedBlob = new Blob([decryptedArrayBuffer], {
+              type: mimeType,
+            });
+            const decryptedUrl = URL.createObjectURL(decryptedBlob);
+
+            // Add decrypted URL to the message object
+            return {
+              ...msg,
+              decryptedUrl,
+            };
+          } catch (err) {
+            console.error(
+              `Failed to decrypt media for message ${msg.id || index}:`,
+              err
+            );
+            return msg; // Return original message on failure
+          }
+        })
+      );
+
+      setDecryptedMessages(updatedMessages); // Set your new enriched array
+      const decryptedMediaItems = updatedMessages
+        .filter((msg) => msg.decryptedUrl) // Only messages with decrypted media
+        .map((msg, index) => ({
+          id: msg.id || index,
+          type: msg.mediaType || getFileType(msg.mediaUrl),
+          url: msg.decryptedUrl,
+          createdAt: msg.createdAt,
+        }));
+
+      // Optional: Sort by date, latest first
+      decryptedMediaItems.sort((a, b) => {
         const dateA = new Date(a.createdAt).getTime();
         const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA; // Descending order
+      });
 
-        return dateB - dateA; // Descending: latest first
-      })
-      .map((msg, index) => ({
-        id: msg.id || index,
-        type: msg.mediaType || getFileType(msg.mediaUrl),
-        url: msg.mediaUrl,
-        createdAt: msg.createdAt, // optional, if you want to display date info
-      }));
+      setMediaItems(decryptedMediaItems.reverse());
+    };
 
-      setMediaItems(updatedMediaItems.reverse());
+    decryptFiles();
   }, [messages]);
+
+  function base64ToArrayBuffer(base64) {
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  function getMimeTypeFromType(type) {
+    switch (type) {
+      case "image":
+        return "image/png"; // or jpeg, depends on your file type
+      case "video":
+        return "video/mp4";
+      case "document":
+        return "application/pdf"; // example
+      default:
+        return "application/octet-stream";
+    }
+  }
 
   const getFileType = (url) => {
     const extension = url.split(".").pop().toLowerCase();
@@ -134,7 +289,7 @@ const ChatWindow = ({
     if (lastMessageRef.current) {
       lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [messages]);
+  }, [decryptedMessages]);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && selectedFiles.length > 0) {
@@ -181,16 +336,25 @@ const ChatWindow = ({
           <MediaGallery mediaItems={mediaItems} />
 
           {/* Chat Messages Container */}
-          <div className="flex flex-col flex-grow overflow-hidden">
+          <div className="flex flex-col flex-grow overflow-hidden relative">
+            {/* ✅ MediaGallery overlay */}
+            <div className="absolute top-4 right-4 z-20">
+              <div className="flex flex-col items-center rounded-lg bg-white/10 backdrop-blur-md pb-2 hover:bg-white/40 transition-all">
+                <p className>Media</p>
+                <MediaGallery mediaItems={mediaItems} />
+              </div>
+            </div>
+
+            {/* ✅ Chat messages container (scrollable) */}
             <div
               ref={chatContainerRef}
               onScroll={handleScroll}
-              className="flex-grow overflow-y-auto p-4 h-0"
-              style={{ maxHeight: "calc(100vh - 128px)" }} // Ensures scrollbar stops above footer
+              className="flex-grow overflow-y-auto p-4"
+              style={{ maxHeight: "calc(100vh - 128px)" }}
             >
-              {messages.map((msg, index) => {
+              {decryptedMessages.map((msg, index) => {
                 const isCurrentUser = msg.senderId === curUser.uid;
-                const isTextOnly = !!msg.message && !msg.mediaUrl;
+                const isTextOnly = !!msg.message && !msg.decryptedUrl;
 
                 return (
                   <div
@@ -199,8 +363,8 @@ const ChatWindow = ({
                       isCurrentUser ? "justify-end" : "justify-start"
                     }`}
                   >
-                    <div className={`max-w-xs break-words text-sm`}>
-                      {/* TEXT MESSAGE WITH BACKGROUND */}
+                    <div className="max-w-xs break-words text-sm">
+                      {/* TEXT MESSAGE */}
                       {isTextOnly && (
                         <div
                           className={`inline-block px-4 py-2 rounded-lg ${
@@ -214,45 +378,50 @@ const ChatWindow = ({
                       )}
 
                       {/* IMAGE MESSAGE */}
-                      {msg.mediaType === "image" && msg.mediaUrl && (
+                      {msg.mediaType === "image" && msg.decryptedUrl && (
                         <img
-                          src={msg.mediaUrl}
+                          src={msg.decryptedUrl}
                           alt="Sent media"
                           className="max-w-full h-auto rounded-lg mt-2 cursor-pointer border"
-                          onClick={() => window.open(msg.mediaUrl, "_blank")}
+                          onClick={() =>
+                            window.open(msg.decryptedUrl, "_blank")
+                          }
                         />
                       )}
 
                       {/* VIDEO MESSAGE */}
-                      {msg.mediaType === "video" && msg.mediaUrl && (
+                      {msg.mediaType === "video" && msg.decryptedUrl && (
                         <video
                           controls
                           className="max-w-full h-auto rounded-lg mt-2 border"
                         >
-                          <source src={msg.mediaUrl} type="video/mp4" />
+                          <source src={msg.decryptedUrl} type="video/mp4" />
                           Your browser does not support the video tag.
                         </video>
                       )}
 
-                      {/* DOCUMENT / FILE MESSAGE */}
-                      {msg.mediaType === "document" && msg.mediaUrl && (
+                      {/* DOCUMENT MESSAGE */}
+                      {msg.mediaType === "document" && msg.decryptedUrl && (
                         <div
                           className={`flex items-center gap-4 p-3 rounded-lg border ${
                             isCurrentUser
                               ? "bg-gray-500 text-white"
                               : "bg-gray-200 text-gray-800"
                           } mt-2 shadow-sm cursor-pointer hover:shadow-md transition`}
-                          onClick={() => window.open(msg.mediaUrl, "_blank")}
+                          onClick={() =>
+                            window.open(msg.decryptedUrl, "_blank")
+                          }
                         >
-                          {/* File Icon */}
                           <div className="text-4xl text-blue-600">📄</div>
-
-                          {/* File Info */}
-                          <div className="flex flex-col">
-                            <p className="font-semibold text-sm text-gray-900">
-                              {msg.fileName || "Document"}
+                          <div className="flex flex-col max-w-[200px] overflow-hidden">
+                            <p
+                              className={`font-semibold text-sm ${
+                                isCurrentUser ? "text-white" : "text-gray-900"
+                              } break-words`}
+                              title={msg.originalFileName || "Document"}
+                            >
+                              {msg.originalFileName || "Document"}
                             </p>
-                            {/* Optional: show file size or type */}
                             <p
                               className={
                                 isCurrentUser ? "text-white" : "text-gray-700"
@@ -264,8 +433,8 @@ const ChatWindow = ({
                         </div>
                       )}
 
-                      {/* TEXT WITH MEDIA (Optional case: if you allow text + media) */}
-                      {msg.message && msg.mediaUrl && (
+                      {/* TEXT + MEDIA */}
+                      {msg.message && msg.decryptedUrl && (
                         <p
                           className={`mt-2 ${
                             isCurrentUser ? "text-white" : "text-black"
@@ -278,7 +447,9 @@ const ChatWindow = ({
                   </div>
                 );
               })}
-              <div ref={lastMessageRef}></div>
+
+              {/* Last message ref for scroll to bottom */}
+              <div ref={lastMessageRef} />
             </div>
           </div>
 
