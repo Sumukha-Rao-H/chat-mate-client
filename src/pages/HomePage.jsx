@@ -218,15 +218,15 @@ const Home = () => {
             const rawAesKey = await exportAESKey(aesKey);
       
             // -- Commenting out RSA encryption for now --
-            // const encryptedAESKeyR = await encryptAESKeyWithRSA(
-            //   receiverPublicKey,
-            //   rawAesKey
-            // );
+            const encryptedAESKeyR = await encryptAESKeyWithRSA(
+              receiverPublicKey,
+              rawAesKey
+            );
       
-            // const encryptedAESKeyS = await encryptAESKeyWithRSA(
-            //   senderPublicKey,
-            //   rawAesKey
-            // );
+            const encryptedAESKeyS = await encryptAESKeyWithRSA(
+              senderPublicKey,
+              rawAesKey
+            );
       
             // Step 4: Create a Blob from encrypted content for upload
             const encryptedBlob = createEncryptedBlob(encryptedContent);
@@ -269,17 +269,15 @@ const Home = () => {
               continue;
             }
       
-            console.log("Raw AES Key (Base64):", arrayBufferToBase64(rawAesKey));
-      
             // Step 7: Send the file message with raw AES key (testing purpose)
             const message = {
               senderId: curUser.uid,
               receiverId: activeConversation.uid,
               mediaUrl: uploadedFileUrl,
               mediaType: mediaType,
-              encryptedAESKeyS: null, // Skipping RSA encryption
-              encryptedAESKeyR: null, // Skipping RSA encryption
-              rawAESKey: arrayBufferToBase64(rawAesKey), // For testing purposes only!
+              encryptedAESKeyS: arrayBufferToBase64(encryptedAESKeyS),
+              encryptedAESKeyR: arrayBufferToBase64(encryptedAESKeyR),
+              rawAESKey: null, // For testing purposes only!
               iv: arrayBufferToBase64(iv),
               originalFileName: fileObj.name,
             };

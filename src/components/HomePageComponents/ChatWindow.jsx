@@ -10,6 +10,9 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import MediaGallery from "./MediaGallery.jsx";
+import { getPrivateKey } from "../../functions/generateKeyPair.js";
+import { importRSAPrivateKey } from "../../functions/fileEncryption.js";
+import { Download, Share2 } from "lucide-react";
 
 const ChatWindow = ({
   activeConversation,
@@ -34,83 +37,7 @@ const ChatWindow = ({
 
   const [mediaItems, setMediaItems] = useState([]);
   const [decryptedMessages, setDecryptedMessages] = useState([]);
-
-  // useEffect(() => {
-  //   if (!messages || messages.length === 0) {
-  //     setMediaItems([]); // No messages
-  //     return;
-  //   }
-
-  //   const decryptFiles = async () => {
-  //     const decryptedMediaItems = [];
-
-  //     for (const [index, msg] of messages.entries()) {
-  //       if (!msg.mediaUrl || !msg.rawAESKey || !msg.iv) continue;
-
-  //       try {
-  //         // Step 1: Fetch encrypted file as ArrayBuffer
-  //         const response = await fetch(msg.mediaUrl);
-  //         const encryptedArrayBuffer = await response.arrayBuffer();
-
-  //         // Step 2: Convert rawAESKey (Base64) back to ArrayBuffer
-  //         const rawAESKeyBuffer = base64ToArrayBuffer(msg.rawAESKey);
-
-  //         // Step 3: Import AES key
-  //         const aesKey = await window.crypto.subtle.importKey(
-  //           "raw",
-  //           rawAESKeyBuffer,
-  //           "AES-GCM",
-  //           true,
-  //           ["decrypt"]
-  //         );
-
-  //         // Step 4: Convert IV from Base64 to ArrayBuffer
-  //         const ivBuffer = base64ToArrayBuffer(msg.iv);
-
-  //         // Step 5: Decrypt file
-  //         const decryptedArrayBuffer = await window.crypto.subtle.decrypt(
-  //           {
-  //             name: "AES-GCM",
-  //             iv: ivBuffer,
-  //           },
-  //           aesKey,
-  //           encryptedArrayBuffer
-  //         );
-
-  //         // Step 6: Create Blob and Object URL from decrypted data
-  //         const mimeType = getMimeTypeFromType(msg.mediaType);
-  //         const decryptedBlob = new Blob([decryptedArrayBuffer], {
-  //           type: mimeType,
-  //         });
-  //         const decryptedUrl = URL.createObjectURL(decryptedBlob);
-
-  //         // Step 7: Push to mediaItems array
-  //         decryptedMediaItems.push({
-  //           id: msg.id || index,
-  //           type: msg.mediaType || getFileType(msg.mediaUrl),
-  //           url: decryptedUrl,
-  //           createdAt: msg.createdAt,
-  //         });
-  //       } catch (err) {
-  //         console.error(
-  //           `Failed to decrypt file for message ${msg.id || index}:`,
-  //           err
-  //         );
-  //       }
-  //     }
-
-  //     // Optional: Sort by date, latest first, and reverse if needed
-  //     decryptedMediaItems.sort((a, b) => {
-  //       const dateA = new Date(a.createdAt).getTime();
-  //       const dateB = new Date(b.createdAt).getTime();
-  //       return dateB - dateA; // Descending
-  //     });
-
-  //     setMediaItems(decryptedMediaItems.reverse()); // Optional: reverse for oldest first
-  //   };
-
-  //   decryptFiles();
-  // }, [messages]);
+  const [fullscreenMedia, setFullscreenMedia] = useState(null);
 
   useEffect(() => {
     if (!messages || messages.length === 0) return;
@@ -118,22 +45,54 @@ const ChatWindow = ({
     const decryptFiles = async () => {
       const updatedMessages = await Promise.all(
         messages.map(async (msg, index) => {
-          if (!msg.mediaUrl || !msg.rawAESKey || !msg.iv) {
+          if (!msg.mediaUrl || !msg.iv) {
             return msg; // No encrypted media, just return as-is
           }
 
           try {
-            const response = await fetch(msg.mediaUrl);
-            const encryptedArrayBuffer = await response.arrayBuffer();
+            // --- Step 1: Decrypt the AES key using your private RSA key ---
+            const encryptedAESKeyBase64 =
+              curUser.uid === msg.senderId
+                ? msg.encryptedAESKeyS
+                : msg.encryptedAESKeyR;
 
-            const rawAESKeyBuffer = base64ToArrayBuffer(msg.rawAESKey);
+            if (!encryptedAESKeyBase64) {
+              console.warn(
+                `No encrypted AES key found for message ${msg.id || index}`
+              );
+              return msg;
+            }
+
+            const encryptedAESKeyBuffer = base64ToArrayBuffer(
+              encryptedAESKeyBase64
+            );
+
+            // Import your RSA private key (replace this with your actual import method)
+            const privateKey = await importRSAPrivateKey(
+              getPrivateKey(curUser.uid)
+            ); // <-- YOU NEED TO IMPLEMENT THIS PART
+            console.log("privateKey", privateKey);
+            const decryptedAESKeyBuffer = await window.crypto.subtle.decrypt(
+              {
+                name: "RSA-OAEP",
+                hash: "SHA-256",
+              },
+              privateKey,
+              encryptedAESKeyBuffer
+            );
+
+            // --- Step 2: Import the decrypted AES key for decryption ---
             const aesKey = await window.crypto.subtle.importKey(
               "raw",
-              rawAESKeyBuffer,
+              decryptedAESKeyBuffer,
               "AES-GCM",
               true,
               ["decrypt"]
             );
+
+            // --- Step 3: Fetch and decrypt the encrypted file ---
+            const response = await fetch(msg.mediaUrl);
+            const encryptedArrayBuffer = await response.arrayBuffer();
 
             const ivBuffer = base64ToArrayBuffer(msg.iv);
 
@@ -146,13 +105,14 @@ const ChatWindow = ({
               encryptedArrayBuffer
             );
 
+            // --- Step 4: Create Blob and URL ---
             const mimeType = getMimeTypeFromType(msg.mediaType);
             const decryptedBlob = new Blob([decryptedArrayBuffer], {
               type: mimeType,
             });
             const decryptedUrl = URL.createObjectURL(decryptedBlob);
 
-            // Add decrypted URL to the message object
+            // Return the updated message with decrypted URL
             return {
               ...msg,
               decryptedUrl,
@@ -167,17 +127,19 @@ const ChatWindow = ({
         })
       );
 
-      setDecryptedMessages(updatedMessages); // Set your new enriched array
+      // Update state with decrypted messages and media items
+      setDecryptedMessages(updatedMessages);
+
       const decryptedMediaItems = updatedMessages
-        .filter((msg) => msg.decryptedUrl) // Only messages with decrypted media
+        .filter((msg) => msg.decryptedUrl)
         .map((msg, index) => ({
           id: msg.id || index,
           type: msg.mediaType || getFileType(msg.mediaUrl),
+          fileName: msg.originalFileName,
           url: msg.decryptedUrl,
           createdAt: msg.createdAt,
         }));
 
-      // Optional: Sort by date, latest first
       decryptedMediaItems.sort((a, b) => {
         const dateA = new Date(a.createdAt).getTime();
         const dateB = new Date(b.createdAt).getTime();
@@ -298,6 +260,41 @@ const ChatWindow = ({
     }
   };
 
+  const downloadFile = async (url, filename) => {
+    try {
+      const response = await fetch(url, { mode: "cors" }); // mode may vary based on CORS policy
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      a.download = filename || "download"; // Optional custom name
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+    }
+  };
+
+  const handleShare = async (url) => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: "Check this out!",
+          text: "Here's a cool file for you!",
+          url: url,
+        });
+        console.log("Shared successfully");
+      } catch (error) {
+        console.error("Error sharing", error);
+      }
+    } else {
+      alert("Web Share API not supported in this browser.");
+    }
+  };
+
   useEffect(() => {
     document.addEventListener("keydown", handleKeyDown);
 
@@ -333,15 +330,16 @@ const ChatWindow = ({
             </div>
           </div>
 
-          <MediaGallery mediaItems={mediaItems} />
-
           {/* Chat Messages Container */}
           <div className="flex flex-col flex-grow overflow-hidden relative">
             {/* ✅ MediaGallery overlay */}
-            <div className="absolute top-4 right-4 z-20">
+            <div className="absolute top-0 right-0 z-20">
               <div className="flex flex-col items-center rounded-lg bg-white/10 backdrop-blur-md pb-2 hover:bg-white/40 transition-all">
                 <p className>Media</p>
-                <MediaGallery mediaItems={mediaItems} />
+                <MediaGallery
+                  mediaItems={mediaItems}
+                  setFullscreenMedia={setFullscreenMedia} // pass setter down
+                />
               </div>
             </div>
 
@@ -349,7 +347,7 @@ const ChatWindow = ({
             <div
               ref={chatContainerRef}
               onScroll={handleScroll}
-              className="flex-grow overflow-y-auto p-4"
+              className="flex-grow overflow-y-auto p-4 h-0"
               style={{ maxHeight: "calc(100vh - 128px)" }}
             >
               {decryptedMessages.map((msg, index) => {
@@ -557,6 +555,60 @@ const ChatWindow = ({
       ) : (
         <div className="flex flex-col items-center justify-center h-full text-gray-600">
           Select a conversation to start chatting.
+        </div>
+      )}
+      {/* Fullscreen Media Viewer */}
+      {fullscreenMedia && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
+          <div className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center p-4">
+            {/* Close Button */}
+            <button
+              onClick={() => setFullscreenMedia(null)}
+              className="absolute top-4 right-4 text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full"
+            >
+              <XMarkIcon className="h-6 w-6" />
+            </button>
+
+            {/* Media Display */}
+            {fullscreenMedia.type === "image" ? (
+              <img
+                src={fullscreenMedia.url}
+                alt="Fullscreen Media"
+                className="max-w-full max-h-full object-contain rounded"
+              />
+            ) : (
+              <video
+                src={fullscreenMedia.url}
+                controls
+                autoPlay
+                className="max-w-full max-h-full rounded"
+              />
+            )}
+
+            {/* Buttons */}
+            <div className="absolute bottom-8 flex gap-4">
+              <button
+                onClick={() =>
+                  downloadFile(fullscreenMedia.url, fullscreenMedia.name)
+                }
+                download
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-blue-600 hover:bg-gray-200 px-4 py-2 rounded shadow-md transition"
+              >
+                <Download className="h-4 w-4 text-blue-600" />
+                Download
+              </button>
+
+              <button
+                onClick={() => handleShare(fullscreenMedia.url)}
+                className="flex items-center gap-2 text-green-500 hover:bg-gray-200 px-4 py-2 rounded shadow-md transition"
+              >
+                <Share2 className="h-4 w-4 text-green-500" />
+                Share
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

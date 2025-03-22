@@ -71,10 +71,44 @@ function createEncryptedBlob(encryptedContent) {
   return new Blob([new Uint8Array(encryptedContent)]);
 }
 
+async function importRSAPrivateKey(pem) {
+  // Remove header, footer, and line breaks
+  const pemHeader = "-----BEGIN PRIVATE KEY-----";
+  const pemFooter = "-----END PRIVATE KEY-----";
+  const pemContents = pem
+    .replace(pemHeader, "")
+    .replace(pemFooter, "")
+    .replace(/\s/g, "");
+
+  const binaryDerString = atob(pemContents);
+  const binaryDer = str2ab(binaryDerString);
+
+  return window.crypto.subtle.importKey(
+    "pkcs8",
+    binaryDer,
+    {
+      name: "RSA-OAEP",
+      hash: "SHA-256",
+    },
+    true,
+    ["decrypt"]
+  );
+
+  function str2ab(str) {
+    const buf = new ArrayBuffer(str.length);
+    const bufView = new Uint8Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
+}
+
 export {
   generateAESKey,
   encryptFileWithAES,
   exportAESKey,
   encryptAESKeyWithRSA,
   createEncryptedBlob,
+  importRSAPrivateKey,
 };

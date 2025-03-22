@@ -15,10 +15,9 @@ import {
 
 const ITEMS_PER_PAGE = 6;
 
-const MediaGallery = ({ mediaItems = [] }) => {
+const MediaGallery = ({ mediaItems = [], setFullscreenMedia }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [page, setPage] = useState(0);
-  const [fullscreenMedia, setFullscreenMedia] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
 
   const toggleGallery = () => {
@@ -63,41 +62,6 @@ const MediaGallery = ({ mediaItems = [] }) => {
     } else {
       // Select all
       setSelectedItems((prev) => [...new Set([...prev, ...pageItemIds])]);
-    }
-  };
-
-  const downloadFile = async (url, filename) => {
-    try {
-      const response = await fetch(url, { mode: "cors" }); // mode may vary based on CORS policy
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = blobUrl;
-      a.download = filename || "download"; // Optional custom name
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Download failed:", error);
-    }
-  };
-
-  const handleShare = async (url) => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "Check this out!",
-          text: "Here's a cool file for you!",
-          url: url,
-        });
-        console.log("Shared successfully");
-      } catch (error) {
-        console.error("Error sharing", error);
-      }
-    } else {
-      alert("Web Share API not supported in this browser.");
     }
   };
 
@@ -188,8 +152,11 @@ const MediaGallery = ({ mediaItems = [] }) => {
             ) : (
               <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-700">
                 <FileTextIcon className="h-8 w-8 mb-2" />
-                <span className="text-xs truncate px-2 text-center">
-                  {latestItem.name || "Document"}
+                <span
+                  className="text-xs truncate px-2 text-left w-full cursor-default"
+                  title={latestItem.fileName || "Document"}
+                >
+                  {latestItem.fileName || "Document"}
                 </span>
               </div>
             )
@@ -279,14 +246,12 @@ const MediaGallery = ({ mediaItems = [] }) => {
                       )}
                     </div>
 
-                    <div
-                      onClick={() => setFullscreenMedia(item)}
-                      className="w-full h-full flex items-center justify-center hover:opacity-80 transition relative"
-                    >
+                    <div className="w-full h-full flex items-center justify-center hover:opacity-80 transition relative">
                       {item.type === "image" ? (
                         <img
                           src={item.url}
                           alt={`Media ${item.id}`}
+                          onClick={() => setFullscreenMedia(item)}
                           className="w-full h-full object-cover"
                         />
                       ) : item.type === "video" ? (
@@ -295,6 +260,7 @@ const MediaGallery = ({ mediaItems = [] }) => {
                             src={item.url}
                             muted
                             preload="metadata"
+                            onClick={() => setFullscreenMedia(item)}
                             className="w-full h-full object-cover opacity-70"
                           />
                           <span className="absolute text-sm font-bold text-white">
@@ -302,10 +268,16 @@ const MediaGallery = ({ mediaItems = [] }) => {
                           </span>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-700">
+                        <div
+                          className="flex flex-col items-center justify-center w-full h-full bg-gray-100 text-gray-700"
+                          onClick={() => window.open(item.url, "_blank")}
+                        >
                           <FileTextIcon className="h-8 w-8 mb-2" />
-                          <span className="text-xs truncate px-2 text-center">
-                            {latestItem.name || "Document"}
+                          <span
+                            className="text-xs truncate px-2 text-left w-full cursor-default"
+                            title={latestItem.fileName || "Document"}
+                          >
+                            {latestItem.fileName || "Document"}
                           </span>
                         </div>
                       )}
@@ -346,61 +318,6 @@ const MediaGallery = ({ mediaItems = [] }) => {
               >
                 <ChevronRightIcon className="h-4 w-4" />
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* Fullscreen Media Viewer */}
-        {fullscreenMedia && (
-          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50">
-            <div className="relative max-w-5xl w-full h-full flex flex-col items-center justify-center p-4">
-              {/* Close Button */}
-              <button
-                onClick={() => setFullscreenMedia(null)}
-                className="absolute top-4 right-4 text-white bg-gray-700 bg-opacity-70 hover:bg-opacity-100 p-2 rounded-full"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-
-              {/* Media Display */}
-              {fullscreenMedia.type === "image" ? (
-                <img
-                  src={fullscreenMedia.url}
-                  alt="Fullscreen Media"
-                  className="max-w-full max-h-full object-contain rounded"
-                />
-              ) : (
-                <video
-                  src={fullscreenMedia.url}
-                  controls
-                  autoPlay
-                  className="max-w-full max-h-full rounded"
-                />
-              )}
-
-              {/* Buttons */}
-              <div className="absolute bottom-8 flex gap-4">
-                <button
-                  onClick={() =>
-                    downloadFile(fullscreenMedia.url, fullscreenMedia.name)
-                  }
-                  download
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-blue-600 hover:bg-gray-200 px-4 py-2 rounded shadow-md transition"
-                >
-                  <Download className="h-4 w-4 text-blue-600" />
-                  Download
-                </button>
-
-                <button
-                  onClick={() => handleShare(fullscreenMedia.url)}
-                  className="flex items-center gap-2 text-green-500 hover:bg-gray-200 px-4 py-2 rounded shadow-md transition"
-                >
-                  <Share2 className="h-4 w-4 text-green-500" />
-                  Share
-                </button>
-              </div>
             </div>
           </div>
         )}
