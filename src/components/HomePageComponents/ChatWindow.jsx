@@ -452,7 +452,7 @@ const ChatWindow = ({
           </div>
 
           {/* Footer (Fixed & Above Scroll) */}
-          <div className="border-t border-gray-300 p-4 flex gap-4 items-center bg-white relative md:pb-20">
+          <div className="border-t border-gray-300 p-4 flex gap-4 items-center bg-white relative">
             {/* 📎 File Attach Icon */}
             <PaperClipIcon
               className={`h-6 w-6 cursor-pointer transition-all ${
